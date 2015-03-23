@@ -1,0 +1,25 @@
+Sorts:
+
+
+Para ordenar los datos agrupando primero por PAN y después por ascendentemente por fecha:
+
+sort -T ~/tmp/ -t "," -k1,1 -k4n -k5n -k6n month_cleaned.csv > month_sorted.csv
+
+
+
+Para ordenar los datos sólo por fecha para poder separar en conjuntos de entrenamiento-prueba:
+
+sort -T ~/tmp/ -t "," -k4,4n -k5,5n -k6,6n month_cleaned.csv > month_sorted_date.csv
+
+
+
+
+Generacion de muestra para Markov:
+
+cat mcc_by_pan_first_sorted.csv | head -150 | tail -10 > first.csv && awk -F "," '{print $1}' first.csv > pans.csv && cat mcc_by_pan_last_sorted.csv | grep -f pans.csv > last.csv && rm pans.csv
+
+
+shuf -n 10 mcc_by_pan_first_sorted.csv > mcc_by_pan_first_sample.csv && awk -F "," '{print $1}' mcc_by_pan_first_sample.csv > pans.csv && cat mcc_by_pan_last_sorted.csv | grep -f pans.csv > last.csv && rm pans.csv 
+
+
+shuf -n 10 mcc_by_pan_first_sorted.csv > mcc_by_pan_first_sample.csv && awk -F "," '{print $1}' mcc_by_pan_first_sample.csv > pans.csv && cat mcc_by_pan_last_sorted.csv | grep -f pans.csv > mcc_by_pan_last_sample.csv && rm pans.csv 
