@@ -16,10 +16,9 @@ import random
 # Store input and output file names
 ifile=''
 rfile=''
-column='com_id'
  
 # Read command line args
-myopts, args = getopt.getopt(sys.argv[1:],"i:r:c:")
+myopts, args = getopt.getopt(sys.argv[1:],"i:r:")
  
 ###############################
 # o == option
@@ -30,8 +29,6 @@ for o, a in myopts:
         ifile=a
     elif o == '-r':
         rfile=a
-    elif o == '-c':
-        column=a
     else:
         print("Usage: %s -i input -o output" % sys.argv[0])
 
@@ -210,7 +207,16 @@ def f():
 		if len(values) > 0:
 			i = assign_partition(values[0],amount_partition)
 			j = assign_partition(values[1],transaction_partition)
-			mtx[i,j]=values[2]
+
+			v = mtx[i,j]
+
+			# Average of values os the bucket
+			if v >= 0:
+				nv = (v+values[2])/2
+			else:
+				nv = values[2]
+
+			mtx[i,j] = nv
 
 	# Matrix, xlabels, ylabels 
 	plot_matrix(mtx,transaction_partition,amount_partition)
