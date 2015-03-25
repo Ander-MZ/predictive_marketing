@@ -10,7 +10,7 @@ import sys, getopt
 # Store input and output file names
 ifile=''
 ofile=''
-column='com_id'
+column=1
  
 # Read command line args
 myopts, args = getopt.getopt(sys.argv[1:],"i:o:c:")
@@ -25,7 +25,7 @@ for o, a in myopts:
     elif o == '-o':
         ofile=a
     elif o == '-c':
-        column=a
+        column=int(a)
     else:
         print("Usage: %s -i input -o output" % sys.argv[0])
 
@@ -39,8 +39,9 @@ fig_name = tmp[len(tmp)-1].split(".")[0] + ".png"
 
 #data = np.asarray(pd.read_csv(ifile,header=None))
 
-data = np.asarray(pd.read_csv(ifile,header=None).ix[:,1:2]) # We select the column with the value
+data = np.asarray(pd.read_csv(ifile,header=None).ix[:,column:column+1]) # We select the column with the value
 
+data = data[data>=0] # Remove -1 from the 'not found in training' cases
 
 nx, xbins, ptchs = plt.hist(data, bins=20)
 plt.clf() # Get rid of this histogram since not the one we want.
