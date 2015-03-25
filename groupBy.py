@@ -54,8 +54,6 @@ def f():
 
 	data = np.asarray(pd.read_csv(ifile,dtype=types)[['pan',column]])
 
-	#data = np.asarray(pd.read_csv(ifile)[['pan',column]])
-
 	print "\tExtracting transactions"
 
 	output_file = open(ofile,'w')

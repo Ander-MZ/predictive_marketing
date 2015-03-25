@@ -38,6 +38,7 @@ for o, a in myopts:
 
 ### =================================================================================
 
+
 # Receives a list and returns a list of overlapping n-tuples:
 # in = [1,2,3,4,5] and n = 2 then out = [(1,2),(2,3),(3,4),(4,5)]
 # in = [1,2,3,4,5] and n = 3 then out = [(1,2,3),(2,3,4),(3,4,5)]
@@ -45,10 +46,16 @@ for o, a in myopts:
 def ntuples(lst, n):
     return zip(*[lst[i:]+lst[:i] for i in range(n)])[:(-n+1)]
 
-# Receives a sparse matrix and a row index, and returns the col index of the max value in that row
+# Receives a sparse matrix and a row index, and returns the col index of the max value in that row.
+# If the row is full of zeros, then the index of the most frequent column is returned.
 
-def index_of_max(mtx,row):
-	return np.argmax(mtx[row,:].todense())
+def index_of_max(mtx,row_index):
+	row = mtx[row_index,:]
+	if row.sum() == 0:
+		i = top_freq_col(mtx)
+	else:
+		i = np.argmax(row.todense())
+	return i
 
 # Receives a sparse matrix and returns the index of the column with highest frequency
 
@@ -157,23 +164,24 @@ def create_sparse_matrix(chain,order):
 
 def read_train_file():
 
-	# Dictionary for storing a 'pan' and its associated sparse transitions matrix, row codification and col codification
-	# d[pan]=(matrix,row_code,col_code) 
+	# Dictionary for storing a 'pan' and its associated transaction history
 
-	dict_pan_matrix = collections.defaultdict(list)	
+	dict_pan_history = collections.defaultdict(list)	
 
 	with open(train_file) as f:
 		for row in f:
 			t = row.strip().split(",") 
-			dict_pan_matrix[t[0]]=create_sparse_matrix(t[1:],memory)
+			dict_pan_history[t[0]]=t[1:]
 
-	return dict_pan_matrix
+	return dict_pan_history
 
 # Read the evaluation file and compare the first n transactions against the Markov Chain expectations
 
 def evaluate_model(dict_pan_matrix,order):
 
 	dict_pan_results = collections.defaultdict(list)
+
+	print ""
 
 	with open(eval_file) as f:
 		for row in f:
@@ -258,9 +266,7 @@ def save_results(dict_pan_results):
 	write = output_file.write
 
 	for pan, precision in dict_pan_results.items():
-		write("%s%s%s%s" % (pan, "," ,precision,"\n"))
-
-	print "File succesfully saved"
+		write("%s%s" % (precision,"\n"))
 
 	output_file.close
 
@@ -271,15 +277,26 @@ def save_results(dict_pan_results):
 # Many transactions, all or almost all in the same place
 # Many transactions, in different places
 
-def select_model(chain,order):
+def select_model(history):
+
+	h_size = len(history)
+
+	if h_size <= 3: # Less than 1 transaction per week (training is 3 weeks)
+		print ""
+	elif h_size <= 21: # Less than 1 transaction per day (training is 3 weeks)
+		print ""
+	else: # More than
+		print ""
+
 	print ""
 
 
 ### =================================================================================
 
-print "File: " , train_file
+# Creates a dictionary containing the transaction history of each card
+dict_pan_history = read_train_file()
 
-dict_pan_matrix = read_train_file()
+for 
 
 if not eval_file == '':
 	dict_pan_results = evaluate_model(dict_pan_matrix,memory)
