@@ -1,7 +1,64 @@
-from xml.etree.ElementTree import Element, SubElement, Comment, tostring
+# -*- coding: utf-8 -*-
+from __future__ import division
+import pandas as pd
+import numpy as np
+import sys, getopt
+import time
+import collections
+import itertools
+import operator
+from xml.etree.ElementTree import Element, SubElement, Comment, tostring, ElementTree
 from xml.etree import ElementTree
 from xml.dom import minidom
 
+### =================================================================================
+
+# Store input and output file names
+ifile=''
+ofile=''
+column='com_id'
+ 
+# Read command line args
+myopts, args = getopt.getopt(sys.argv[1:],"i:o:c:")
+ 
+###############################
+# o == option
+# a == argument passed to the o
+###############################
+for o, a in myopts:
+    if o == '-i':
+        ifile=a
+    elif o == '-o':
+        ofile=a
+    elif o == '-c':
+        column=a
+    else:
+        print("Usage: %s -i input -o output" % sys.argv[0])
+
+### =================================================================================
+
+def dictionary_to_XML(d):
+
+	top = Element('Data')
+	cards = []
+	append = cards.append
+
+	for pan, history in d.items():
+
+		card = Element('Card',PAN=pan)
+		transactions_list = SubElement(card, "Transactions")
+
+		# For each transaction of the card, create a node and add a tag for each atribute
+
+		for t in history:
+			node = SubElement(transactions_list, "T")
+			for i in range(len(t)):
+				node.set(columns[i],str(t[i]))
+
+		append(card)
+
+	top.extend(cards)
+	return top
 
 def prettify(elem):
     """Return a pretty-printed XML string for the Element.
@@ -10,39 +67,73 @@ def prettify(elem):
     reparsed = minidom.parseString(rough_string)
     return reparsed.toprettyxml(indent="  ")
 
-top = Element('Data')
+### =================================================================================
 
-comment = Comment('Almacena las transacciones de cada tarjeta')
-top.append(comment)
+types = {'pan':'str',
+	  'amount':'float',
+	  'mcc':'str',
+	  'month':'int',
+	  'day':'int',
+	  'hour':'int',
+	  'min':'int',
+	  'dow':'int',
+	  'com_id':'str'}
 
-child_card = SubElement(top, 'Card')
-
-child_pan = SubElement(child_card, 'PAN')
-child_pan.text = '000085d51fc7ca2879750f7850bd7db1'
-
-child_transactions = SubElement(child_card, "Transactions")
-
-child_transaction = SubElement(child_transactions, "T")
-child_transaction.text = "(25.00,18/03/2015,6385)"
-child_transaction = SubElement(child_transactions, "T")
-child_transaction.text = "(7425.00,05/11/2014,3301)"
-child_transaction = SubElement(child_transactions, "T")
-child_transaction.text = "(682.00,23/02/2014,9000)"
-child_transaction = SubElement(child_transactions, "T")
-child_transaction.text = "(99.00,11/07/2015,1234)"
-
-
-child_card = SubElement(top, 'Card')
-
-child_pan = SubElement(child_card, 'PAN')
-child_pan.text = 'b34a4110506e21bb1bf1a46676b8212'
-
-child_transactions = SubElement(child_card, "Transactions")
-
-child_transaction = SubElement(child_transactions, "T")
-child_transaction.text = "(7425.00,05/11/2014,3301)"
-child_transaction = SubElement(child_transactions, "T")
-child_transaction.text = "(25.00,18/03/2015,6385)"
+columns = ['amount',
+		  'mcc',
+		  'month',
+		  'day',
+		  'hour',
+		  'min',
+		  'dow',
+		  'com_id']
 
 
-print prettify(top)
+print "\tReading file"
+
+data = np.asarray(pd.read_csv(ifile,dtype=types))
+
+print "\tExtracting transactions"
+
+# Group rows by 'pan' and then adds entry to dictionary for each pan & its 
+# associated values listed in chronological order (ascending)
+
+d = collections.defaultdict(list)
+
+for key, grp in itertools.groupby(data, key=operator.itemgetter(0)):
+	d[key] = map(operator.itemgetter(range(1,len(types))),grp)
+
+print "\nCreating XML file"
+
+xml_result = dictionary_to_XML(d)
+
+print prettify(xml_result)
+
+print "\nSaving file"
+
+tree = ElementTree.ElementTree(xml_result)
+
+tree.write('../data/output.xml')
+
+# output_file.close
+
+
+
+############################################################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
