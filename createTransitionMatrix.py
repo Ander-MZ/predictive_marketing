@@ -53,8 +53,7 @@ def index_of_max(mtx,row):
 # Receives a sparse matrix and returns the index of the column with highest frequency
 
 def top_freq_col(mtx):
-	sums = mtx.sum(axis=0) # Sum the columns
-	return np.argmax(sums)
+	return np.argmax(mtx.sum(axis=0)) # axis=0 -> sum over columns
 
 # Receives a dictionary and a value, and returns the key associated to the given value
 
@@ -162,10 +161,22 @@ def read_train_file():
 
 	dict_pan_matrix = collections.defaultdict(list)	
 
+	i = 0
+	p = 0
+	q = 10000
+
 	with open(train_file) as f:
 		for row in f:
 			t = row.strip().split(",") 
 			dict_pan_matrix[t[0]]=create_sparse_matrix(t[1:],memory)
+
+			if i % q == 0:
+				sys.stdout.write("Current progress: %d models created\r" % (p*q) )
+				sys.stdout.flush()
+				#print "\tCurrent progress: " , p*q  , " models created"
+				p += 1
+				i = 0
+			i += 1
 
 	return dict_pan_matrix
 
@@ -175,6 +186,10 @@ def evaluate_model(dict_pan_matrix,order):
 
 	dict_pan_results = collections.defaultdict(list)
 
+	i = 0
+	p = 0
+	q = 10000
+
 	with open(eval_file) as f:
 		for row in f:
 			values = row.strip().split(",")
@@ -183,7 +198,7 @@ def evaluate_model(dict_pan_matrix,order):
 
 			model = dict_pan_matrix[pan]
 
-			if len(model) > 0: # The evaluation 'pan' was seen on the training phase
+			if not model == []: # The evaluation 'pan' was seen on the training phase
 
 				(mtx,row_code,col_code) = model
 
@@ -244,6 +259,18 @@ def evaluate_model(dict_pan_matrix,order):
 				#
 				#
 
+
+			# Release memory
+			dict_pan_matrix[pan] = ''
+
+			if i % q == 0:
+				sys.stdout.write("Current progress: %d cards evaluated\r" % (p*q) )
+				sys.stdout.flush()
+				#print "\tCurrent progress: " , p*q  , " cards evaluated"
+				p += 1
+				i = 0
+			i += 1
+
 	return dict_pan_results
 
 
@@ -264,6 +291,8 @@ def save_results(dict_pan_results):
 
 	output_file.close
 
+	print "End of program"
+
 # Based on the characteristics of the transaction history of the card, the best
 # model is used to create the prediction:
 
@@ -277,11 +306,15 @@ def select_model(chain,order):
 
 ### =================================================================================
 
-print "File: " , train_file
+print "Creating models from file: " , train_file
 
 dict_pan_matrix = read_train_file()
 
+print "Evaluating file: " , eval_file
+
 if not eval_file == '':
 	dict_pan_results = evaluate_model(dict_pan_matrix,memory)
+
+print "Saving results into: " , results_file
 
 save_results(dict_pan_results)

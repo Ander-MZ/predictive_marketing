@@ -281,9 +281,9 @@ def select_model(history):
 
 	h_size = len(history)
 
-	if h_size <= 3: # Less than 1 transaction per week (training is 3 weeks)
+	if h_size == 1: # 
 		print ""
-	elif h_size <= 21: # Less than 1 transaction per day (training is 3 weeks)
+	elif h_size <= 20: # 
 		print ""
 	else: # More than
 		print ""

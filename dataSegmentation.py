@@ -16,9 +16,10 @@ import random
 # Store input and output file names
 ifile=''
 rfile=''
+levels=10
  
 # Read command line args
-myopts, args = getopt.getopt(sys.argv[1:],"i:r:")
+myopts, args = getopt.getopt(sys.argv[1:],"i:r:l:")
  
 ###############################
 # o == option
@@ -29,6 +30,8 @@ for o, a in myopts:
         ifile=a
     elif o == '-r':
         rfile=a
+    elif o == '-l':
+        levels=int(a)
     else:
         print("Usage: %s -i input -o output" % sys.argv[0])
 
@@ -38,7 +41,7 @@ tmp = rfile.split("/")
 
 base_dir = "/".join(tmp[:len(tmp)-1]) + "/"
 
-fig_name = tmp[len(tmp)-1].split(".")[0] + "_matrix.png"
+fig_name = tmp[len(tmp)-1].split(".")[0] + "_matrix_" + str(levels) + ".png"
 
 ### =================================================================================
 
@@ -87,6 +90,8 @@ def plot_matrix(m,xpartition,ypartition,norm=False):
     plt.xlabel('Number of transactions')
     plt.xticks(range(len(xtags)),xtags)
     plt.yticks(range(len(ytags)),ytags)
+    locs, labels = plt.xticks()
+    plt.setp(labels, rotation=90)
 
     plt.savefig(base_dir + fig_name)
 
@@ -176,8 +181,8 @@ def f():
 	max_amount = median_amount
 	max_transactions = median_transaction
 
-	dev_a = 30
-	dev_t = 15
+	dev_a = 40
+	dev_t = 20
 
 	for pan, precision in results:
 		if len(d[pan]) > 0:
@@ -192,15 +197,14 @@ def f():
 
 	print "Transactions: Median = " , median_transaction
 
-	n = 20
 	log = False # logarithmic scale for partitioning
 
-	amount_partition = create_partition(min_amount,dev_a*max_amount,log,n)
-	transaction_partition = create_partition(min_transactions,dev_t*max_transactions,log,n)
+	amount_partition = create_partition(min_amount,dev_a*max_amount,log,levels)
+	transaction_partition = create_partition(min_transactions,dev_t*max_transactions,log,levels)
 
 	# Initialize matrix with -1 to differentiate from 0 precision
 
-	mtx = np.zeros((n,n), dtype=np.float)-1
+	mtx = np.zeros((levels,levels), dtype=np.float)-1
 
 	# values = [mean amount, number of transactions, precision of predictions]
 	for pan, values in d.items():
