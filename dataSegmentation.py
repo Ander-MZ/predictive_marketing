@@ -7,6 +7,7 @@ import time
 import itertools
 import operator
 import collections
+import matplotlib
 import matplotlib.pyplot as plt
 import math
 import random
@@ -76,23 +77,26 @@ def plot_matrix(m,xpartition,ypartition,norm=False):
                 cm[i,j]=cm[i,j]/total
         m=cm
 
-    # Removed first element of partition. Each square has elements LESS THAN thick
+    # Removed first element of partition. Each square has elements LESS THAN tick label
 
     xtags = map(str,xpartition[1:])
     ytags = map(str,ypartition[1:])
 
-    plt.matshow(m)
+    # Set up a colormap:
+    palette = matplotlib.cm.RdYlGn
+    palette.set_under('gray', 1.0)
+
+    plt.matshow(m,vmin=0,vmax=1,cmap=palette)
     plt.title('Precision of prediction\n')
-    if norm:
-        plt.clim(0,1)
     plt.colorbar()
+    
+
     plt.ylabel('Mean amount')
     plt.xlabel('Number of transactions')
     plt.xticks(range(len(xtags)),xtags)
     plt.yticks(range(len(ytags)),ytags)
     locs, labels = plt.xticks()
     plt.setp(labels, rotation=90)
-
     plt.savefig(base_dir + fig_name)
 
     #plt.show()
@@ -162,7 +166,7 @@ def f():
 
 		# Dictionary that stores a list with (mean amount, number of transactions, precision of predictions) for each 'pan'
 
-		d[pan]=[m_amount,t_size,random.uniform(0,1)]
+		d[pan]=[m_amount,t_size,0]
 		
 		#write( "%s%s%s%s" % ( pan, "," , len(map(operator.itemgetter(1),grp)) , '\n' ) )
 
@@ -185,7 +189,7 @@ def f():
 	dev_t = 20
 
 	for pan, precision in results:
-		if len(d[pan]) > 0:
+		if len(d[pan]) > 0: # If pan was seen on training phase
 			d[pan][2]=precision
 			if d[pan][0] > dev_a*median_amount:
 				d[pan][0] = dev_a*median_amount-1
@@ -214,7 +218,7 @@ def f():
 
 			v = mtx[i,j]
 
-			# Average of values os the bucket
+			# Average of values on the bucket
 			if v >= 0:
 				nv = (v+values[2])/2
 			else:
@@ -224,6 +228,8 @@ def f():
 
 	# Matrix, xlabels, ylabels 
 	plot_matrix(mtx,transaction_partition,amount_partition)
+
+	print mtx
 
 f()
 
