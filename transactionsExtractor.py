@@ -7,19 +7,31 @@ import time
 import collections
 import itertools
 import operator
-from xml.etree.ElementTree import Element, SubElement, Comment, tostring, ElementTree
-from xml.etree import ElementTree
+from xml.etree.ElementTree import Element, SubElement, Comment, tostring, ElementTree, ElementPath
 from xml.dom import minidom
+
+### This class takes a list of transactions sorted by date, and then parses it
+### into a XML file with the following structure:
+
+# <Data>
+#	<Card PAN="pan">
+#		<Transactions>		
+#			<T AMOUNT="amount" MCC="mcc" COM_ID="com_id" MONTH="month" DAY="day" HOUR="hour" MIN="min" DOW="dow" />
+#			...
+#			...
+#			<T AMOUNT="amount" MCC="mcc" COM_ID="com_id" MONTH="month" DAY="day" HOUR="hour" MIN="min" DOW="dow" />
+#		</Transactions>
+#	</Card>
+# </Data>
 
 ### =================================================================================
 
 # Store input and output file names
 ifile=''
 ofile=''
-column='com_id'
  
 # Read command line args
-myopts, args = getopt.getopt(sys.argv[1:],"i:o:c:")
+myopts, args = getopt.getopt(sys.argv[1:],"i:o:")
  
 ###############################
 # o == option
@@ -30,8 +42,6 @@ for o, a in myopts:
         ifile=a
     elif o == '-o':
         ofile=a
-    elif o == '-c':
-        column=a
     else:
         print("Usage: %s -i input -o output" % sys.argv[0])
 
@@ -48,7 +58,7 @@ def dictionary_to_XML(d):
 		card = Element('Card',PAN=pan)
 		transactions_list = SubElement(card, "Transactions")
 
-		# For each transaction of the card, create a node and add a tag for each atribute
+		# For each transaction of the card, create a node and add a tag for each attribute
 
 		for t in history:
 			node = SubElement(transactions_list, "T")
@@ -79,14 +89,14 @@ types = {'pan':'str',
 	  'dow':'int',
 	  'com_id':'str'}
 
-columns = ['amount',
-		  'mcc',
-		  'month',
-		  'day',
-		  'hour',
-		  'min',
-		  'dow',
-		  'com_id']
+columns = ['AMOUNT',
+		  'MCC',
+		  'MONTH',
+		  'DAY',
+		  'HOUR',
+		  'MIN',
+		  'DOW',
+		  'COM_ID']
 
 
 print "\tReading file"
@@ -107,17 +117,13 @@ print "\nCreating XML file"
 
 xml_result = dictionary_to_XML(d)
 
-print prettify(xml_result)
+#print prettify(xml_result)
 
 print "\nSaving file"
 
 tree = ElementTree.ElementTree(xml_result)
 
-tree.write('../data/output.xml')
-
-# output_file.close
-
-
+tree.write(ofile)
 
 ############################################################
 
