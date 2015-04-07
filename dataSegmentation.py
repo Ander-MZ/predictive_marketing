@@ -10,7 +10,6 @@ import collections
 import matplotlib
 import matplotlib.pyplot as plt
 import math
-import random
 
 ### =================================================================================
 
@@ -166,7 +165,7 @@ def f():
 
 		# Dictionary that stores a list with (mean amount, number of transactions, precision of predictions) for each 'pan'
 
-		d[pan]=[m_amount,t_size,0]
+		d[pan]=[m_amount,t_size,-1]
 		
 		#write( "%s%s%s%s" % ( pan, "," , len(map(operator.itemgetter(1),grp)) , '\n' ) )
 
@@ -201,6 +200,8 @@ def f():
 
 	print "Transactions: Median = " , median_transaction
 
+	print "New Limits: Amount [" , min_amount , "," , dev_a*max_amount , "] , Transactions [" , min_transactions , "," , dev_t*max_transactions , "]"
+
 	log = False # logarithmic scale for partitioning
 
 	amount_partition = create_partition(min_amount,dev_a*max_amount,log,levels)
@@ -213,23 +214,28 @@ def f():
 	# values = [mean amount, number of transactions, precision of predictions]
 	for pan, values in d.items():
 		if len(values) > 0:
+
 			i = assign_partition(values[0],amount_partition)
 			j = assign_partition(values[1],transaction_partition)
-
 			v = mtx[i,j]
+
+			p = values[2]
 
 			# Average of values on the bucket
 			if v >= 0:
-				nv = (v+values[2])/2
+				if p >= 0:
+					nv = (v+p)/2
+				else:
+					nv = v
 			else:
-				nv = values[2]
+				nv = p
 
 			mtx[i,j] = nv
 
 	# Matrix, xlabels, ylabels 
 	plot_matrix(mtx,transaction_partition,amount_partition)
 
-	print mtx
+	#print mtx
 
 f()
 
