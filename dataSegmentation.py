@@ -17,9 +17,11 @@ import math
 ifile=''
 rfile=''
 levels=10
- 
+dev_a=40
+dev_t=20 
+
 # Read command line args
-myopts, args = getopt.getopt(sys.argv[1:],"i:r:l:")
+myopts, args = getopt.getopt(sys.argv[1:],"i:r:l:a:t:")
  
 ###############################
 # o == option
@@ -32,6 +34,10 @@ for o, a in myopts:
         rfile=a
     elif o == '-l':
         levels=int(a)
+    elif o == '-a':
+        dev_a=int(a)
+    elif o == '-t':
+        dev_t=int(a)
     else:
         print("Usage: %s -i input -o output" % sys.argv[0])
 
@@ -82,7 +88,8 @@ def plot_matrix(m,xpartition,ypartition,norm=False):
     ytags = map(str,ypartition[1:])
 
     # Set up a colormap:
-    palette = matplotlib.cm.RdYlGn
+    #palette = matplotlib.cm.RdYlGn
+    palette = matplotlib.cm.jet
     palette.set_under('gray', 1.0)
 
     plt.matshow(m,vmin=0,vmax=1,cmap=palette)
@@ -183,9 +190,6 @@ def f():
 
 	max_amount = median_amount
 	max_transactions = median_transaction
-
-	dev_a = 40
-	dev_t = 20
 
 	for pan, precision in results:
 		if len(d[pan]) > 0: # If pan was seen on training phase
