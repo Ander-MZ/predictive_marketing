@@ -5,6 +5,8 @@ import collections
 import sys, getopt
 from itertools import izip, islice, product
 import scipy.sparse as sps
+from xml.etree.ElementTree import Element, SubElement, Comment, tostring, ElementTree, ElementPath
+from xml.dom import minidom
 
 ### =================================================================================
 
@@ -38,6 +40,48 @@ for o, a in myopts:
 
 ### =================================================================================
 
+# Based on the characteristics of the transaction history of the card, the best
+# model is used to create the prediction
+
+def select_model(history):
+
+	h_size = len(history)
+
+	if h_size == 1: # 
+		print ""
+	elif h_size <= 20: # 
+		print ""
+	else: # More than
+		print ""
+
+	print ""
+
+# Receives the XML file containing all the transaction history data, and parses it to populate
+# the dictionary required by the models
+
+def parse_XML(doc):
+
+	d = collections.defaultdict(list)
+	cards = doc.getElementsByTagName('Card')
+
+	for card in cards:
+		pan = card.getAttribute('PAN')
+		d[pan] = []
+		print "\n\nPAN" , pan
+		transactions = card.getElementsByTagName('T')
+
+		n = len(transactions)
+
+		print "Number of transactions: " , n
+
+		for t in transactions:
+			for attrName, attrValue in t.attributes.items():
+				#print "attribute %s = %s" % (attrName, attrValue)
+				if attrName == "COM_ID":
+					d[pan].append(str(attrValue))
+
+		for values in d[pan]:
+			print values
 
 # Receives a list and returns a list of overlapping n-tuples:
 # in = [1,2,3,4,5] and n = 2 then out = [(1,2),(2,3),(3,4),(4,5)]
@@ -270,35 +314,21 @@ def save_results(dict_pan_results):
 
 	output_file.close
 
-# Based on the characteristics of the transaction history of the card, the best
-# model is used to create the prediction:
-
-# Only 1 transaction
-# Many transactions, all or almost all in the same place
-# Many transactions, in different places
-
-def select_model(history):
-
-	h_size = len(history)
-
-	if h_size == 1: # 
-		print ""
-	elif h_size <= 20: # 
-		print ""
-	else: # More than
-		print ""
-
-	print ""
 
 
 ### =================================================================================
 
 # Creates a dictionary containing the transaction history of each card
-dict_pan_history = read_train_file()
 
-for 
+xml_history = minidom.parse(train_file)
 
-if not eval_file == '':
-	dict_pan_results = evaluate_model(dict_pan_matrix,memory)
+parse_XML(xml_history)
 
-save_results(dict_pan_results)
+# dict_pan_history = read_train_file()
+
+# for 
+
+# if not eval_file == '':
+# 	dict_pan_results = evaluate_model(dict_pan_matrix,memory)
+
+# save_results(dict_pan_results)
