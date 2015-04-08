@@ -5,7 +5,7 @@ import collections
 import sys, getopt
 from itertools import izip, islice, product
 import scipy.sparse as sps
-from xml.etree.ElementTree import Element, SubElement, Comment, tostring, ElementTree, ElementPath
+from xml.etree.cElementTree import Element, SubElement, Comment, tostring, ElementTree, ElementPath
 from xml.dom import minidom
 import math
 import matplotlib
@@ -130,8 +130,8 @@ def update_evaluation_matrix(mtx,counts,n,p,xpartition,ypartition):
 
 def select_and_evaluate_model(history,n_t):
 
-	m0_max_history = 25 
-	m1_max_history = 1000
+	m0_max_history = 1000 
+	m1_max_history = 100000
 
 	if n_t == 1: # 
 		
@@ -188,7 +188,7 @@ def parse_XML(doc):
 
 		progress += 1
 
-		if progress%500==0:
+		if progress%1000==0:
 			sys.stdout.write("\tCurrent progress: %.2f %% of cards analyzed\r" % (100*progress/len(cards)) )
 			sys.stdout.flush()
 
@@ -206,27 +206,13 @@ def parse_XML(doc):
 				if attrName == "COM_ID":
 					history.append(str(attrValue))		
 
-		# Model 0
-
-		# if m0_min_history <= n_t <= m0_max_history and len(history) >= 2:
-		# 	precision += model0.evaluate(history[:n_t],history[n_t:])
-
-		# Model 1
-
-		# if m1_min_history <= n_t <= m1_max_history and len(history) >= 2:
-		# 	precision += model1.evaluate(history[:n_t],history[n_t:],1)
-
-		############################################################
-
 		if len(history)>2:
 			#p = model0.evaluate(history[:n_t],history[n_t:])
 			p = select_and_evaluate_model(history,n_t)
 			precision += p
 			update_evaluation_matrix(mtx,counts,n_t,p,min_range,min_range)
 
-		############################################################
-
-		d[pan] = history
+		#d[pan] = history
 
 	sys.stdout.write("\tCurrent progress: %.2f %% of cards analyzed\r\n" % (100.00) )
 	sys.stdout.flush()
