@@ -7,6 +7,16 @@ from itertools import izip, islice, product
 import scipy.sparse as sps
 from xml.etree.ElementTree import Element, SubElement, Comment, tostring, ElementTree, ElementPath
 from xml.dom import minidom
+import math
+import matplotlib
+import matplotlib.pyplot as plt
+import warnings
+
+# Models
+
+import model0
+import model1
+
 
 ### =================================================================================
 
@@ -14,11 +24,12 @@ from xml.dom import minidom
 train_file=''
 eval_file=''
 results_file=''
+alpha=0.75
 memory=1
 debug="f"
  
 # Read command line args (training file, evaluation file, results file, order of the chain, debug mode)
-myopts, args = getopt.getopt(sys.argv[1:],"t:e:r:o:d:")
+myopts, args = getopt.getopt(sys.argv[1:],"t:e:r:o:a:")
  
 ###############################
 # o == option
@@ -33,12 +44,86 @@ for o, a in myopts:
         results_file=a
     elif o == '-o':
         memory=int(a)
-    elif o == '-d':
-        debug=a
+    elif o == '-a':
+        alpha=float(a)
     else:
         print("Usage: %s -i input -o output" % sys.argv[0])
 
 ### =================================================================================
+
+# tmp = rfile.split("/")
+
+# base_dir = "/".join(tmp[:len(tmp)-1]) + "/"
+
+# fig_name = tmp[len(tmp)-1].split(".")[0] + "_matrix_" + str(levels) + ".png"
+
+def assign_partition(value,partition):
+	i = 0
+
+	# There are n+1 partitions, but only n indices
+	while(i < len(partition)-1 and value > partition[i]):
+		i += 1
+
+	if value > partition[i]:       
+		i += 1
+
+	return i-1
+
+def plot_matrix(m,xpartition,ypartition,title,norm=False):
+
+    # Normalize values between 0 and 1
+    if norm:
+        cm = m.astype(float)
+        for i in range(cm.shape[0]):
+            total = cm[i].sum()
+            for j in range(cm.shape[1]):
+                cm[i,j]=cm[i,j]/total
+        m=cm
+
+    if ypartition[0]==0:
+    	ypartition[0]=1
+
+    xtags = map(str,xpartition)
+    ytags = map(str,ypartition)
+
+    # Set up a colormap:
+    #palette = matplotlib.cm.RdYlGn
+    palette = matplotlib.cm.jet
+    palette.set_under('gray', 1.0)
+
+    plt.matshow(m,vmin=0,vmax=1,cmap=palette)
+    plt.title(title+'\n')
+    plt.colorbar()
+    
+
+    plt.ylabel('Min history')
+    plt.xlabel('Max history')
+    plt.xticks(range(len(xtags)),xtags)
+    plt.yticks(range(len(ytags)),ytags)
+    locs, labels = plt.xticks()
+    plt.setp(labels, rotation=90)
+    
+    #plt.savefig(base_dir + fig_name
+    plt.savefig("../results/model0_x.png")
+    #plt.show()
+
+def update_evaluation_matrix(mtx,counts,n,p,xpartition,ypartition):
+	i = assign_partition(n,ypartition) # Min
+	j = assign_partition(n,xpartition) # Max
+	v = mtx[i,j]
+
+	# Average of values on the bucket
+	if v >= 0:
+		if p >= 0:
+			nv = v+p
+		else:
+			nv = v
+	else:
+		nv = p
+
+	counts[i,j] += 1
+	mtx[i,j] = nv
+
 
 # Based on the characteristics of the transaction history of the card, the best
 # model is used to create the prediction
@@ -47,10 +132,21 @@ def select_model(history):
 
 	h_size = len(history)
 
+	m0_max_history = 25 
+
+	m1_max_history = 1000
+
 	if h_size == 1: # 
 		print ""
-	elif h_size <= 20: # 
-		print ""
+
+	elif h_size <= m0_max_history: # Model 0
+
+		precision += model0.evaluate(history[:n_t],history[n_t:])
+
+	elif h_size <= m1_max_history: # Model 0	
+
+		precision += model1.evaluate(history[:n_t],history[n_t:],1)
+
 	else: # More than
 		print ""
 
@@ -64,239 +160,81 @@ def parse_XML(doc):
 	d = collections.defaultdict(list)
 	cards = doc.getElementsByTagName('Card')
 
+	progress = 0
+	precision = 0.0
+
+	m0_min_history = 1
+	m0_max_history = 20 # Average precision:  0.203688330522 for [1,20]
+
+	m1_min_history = 50
+	m1_max_history = 450
+
+	#####
+
+	delta = 25
+
+	levels = int(math.floor((m1_max_history-m1_min_history)/delta))
+
+	mtx = np.zeros((levels,levels), dtype=np.float) - 1
+	counts = np.zeros((levels,levels), dtype=np.float)
+
+	min_range = range(m1_min_history,delta*levels+m1_min_history,delta)
+	max_range = range(m1_min_history+delta,delta*levels+m1_min_history+delta,delta)
+
+	#####
+
 	for card in cards:
+
+		progress += 1
+
+		if progress%500==0:
+			sys.stdout.write("\tCurrent progress: %.2f %% of cards analyzed\r" % (100*progress/len(cards)) )
+			sys.stdout.flush()
+
 		pan = card.getAttribute('PAN')
-		d[pan] = []
-		print "\n\nPAN" , pan
 		transactions = card.getElementsByTagName('T')
-
+		history = []
 		n = len(transactions)
+		n_t = int(math.floor(alpha*n))
+		n_e = n - n_t
 
-		print "Number of transactions: " , n
+		#print "Number of transactions: %d (%d -> training, %d -> evaluation)" % (n,n_t,n_e)
 
 		for t in transactions:
 			for attrName, attrValue in t.attributes.items():
-				#print "attribute %s = %s" % (attrName, attrValue)
 				if attrName == "COM_ID":
-					d[pan].append(str(attrValue))
+					history.append(str(attrValue))		
 
-		for values in d[pan]:
-			print values
+		# Model 0
 
-# Receives a list and returns a list of overlapping n-tuples:
-# in = [1,2,3,4,5] and n = 2 then out = [(1,2),(2,3),(3,4),(4,5)]
-# in = [1,2,3,4,5] and n = 3 then out = [(1,2,3),(2,3,4),(3,4,5)]
+		if m0_min_history <= n_t <= m0_max_history and len(history) >= 2:
+			precision += model0.evaluate(history[:n_t],history[n_t:])
 
-def ntuples(lst, n):
-    return zip(*[lst[i:]+lst[:i] for i in range(n)])[:(-n+1)]
+		# Model 1
 
-# Receives a sparse matrix and a row index, and returns the col index of the max value in that row.
-# If the row is full of zeros, then the index of the most frequent column is returned.
+		# if m1_min_history <= n_t <= m1_max_history and len(history) >= 2:
+		# 	precision += model1.evaluate(history[:n_t],history[n_t:],1)
 
-def index_of_max(mtx,row_index):
-	row = mtx[row_index,:]
-	if row.sum() == 0:
-		i = top_freq_col(mtx)
-	else:
-		i = np.argmax(row.todense())
-	return i
+		############################################################
 
-# Receives a sparse matrix and returns the index of the column with highest frequency
+		if len(history)>2:
+			p = model0.evaluate(history[:n_t],history[n_t:])
+			update_evaluation_matrix(mtx,counts,n_t,p,min_range,min_range)
 
-def top_freq_col(mtx):
-	sums = mtx.sum(axis=0) # Sum the columns
-	return np.argmax(sums)
+		############################################################
 
-# Receives a dictionary and a value, and returns the key associated to the given value
+		d[pan] = history
 
-def key_of_value(d,value):
-	key = ''
-	for k, v in d.iteritems():
-		if v == value:
-			key = k
-			break
-	return key
+	sys.stdout.write("\tCurrent progress: %.2f %% of cards analyzed\r\n" % (100.00) )
+	sys.stdout.flush()
 
-# Creates a sparse transition matrix for a given 'pan' and its chain of events, modeling an m-order Markov Process. 
+	print "Average precision: " , precision / progress , " ( min-history = " , m1_min_history , ", max-history = " , m1_max_history, " )"
 
-def create_sparse_matrix(chain,order):
+	with warnings.catch_warnings():
+		warnings.filterwarnings("ignore", message="divide by zero encountered in TRUE_divide")
+		mtx = np.where(counts==0, -1, mtx/counts)
+	plot_matrix(mtx,max_range,min_range,"Model 0 results")
 
-	row_code = collections.defaultdict(list)
-	col_code = collections.defaultdict(list)
-	states = set(chain)
-	
-	# Calculate the ratio transitions/states
-
-	r = (len(chain)-1)/len(states)
-
-	# Generate a numerical index for each combination of states
-
-	index = 0
-
-	for p in product(sorted(states),repeat=max(order,1)):
-		row_code["".join(p)]=index	
-		index += 1
-
-	# Generate a numerical index for each state
-
-	index = 0
-
-	for element in sorted(states):
-		col_code[element]=index
-		index += 1
-
-	# for k, v in row_code.items():
-	# 	print "key: ", k, " value: ", v
-
-	# print ""
-
-	# for k, v in col_code.items():
-	# 	print "key: ", k, " value: ", v
-
-	# print ""
-
-
-	# Create arrays to populate the sparse matrix
-
-	row,col,f = [],[],[]
-
-	append_row = row.append
-	append_col = col.append
-	append_f = f.append
-
-	if order == 0: # Matrix only matters for state with top frequency
-
-		for state in chain:
-			append_row(0) # Unique row
-			append_col(col_code[state])
-			append_f(1)
-
-	else:
-
-		# Duplicate entries are summed together
-
-		for t in ntuples(chain,order+1):
-			append_row(row_code["".join(t[:order])])
-			append_col(col_code[t[order:][0]])
-			append_f(1) 
-
-	# Create a sparse matrix in 'coo' format with # rows = (states^order) and # cols = states 
-
-	mtx = sps.coo_matrix((f, (row, col)), shape=(len(states)**order, len(states)))
-
-	# Transform matrix into Compressed Sparse Row format to allow arithmetic manipulation and slicing
-
-	mtx = mtx.tocsr()
-
-	# Normalize matrix to represent probabilities
-
-	#row_sums = np.array(mtx.sum(axis=1))[:,0]
-	#row_indices, col_indices = mtx.nonzero()
-	#mtx.data = mtx.data / row_sums[row_indices]
-
-	if debug=="t":
-		print "Density: " , mtx.nnz/len(states)**(order+1)
-		#if len(states) <= 7:	
-			#print "\n" , mtx.todense() , "\n\n***\n"
-
-	#np.savetxt(("../results/matrices/" + str(pan) + ".csv"), matrix, delimiter=",",fmt='%.4f')
-
-	return (mtx,row_code,col_code)
-
-
-# Read the file and store first column ('pan') as key, with a chain of events as value
-
-def read_train_file():
-
-	# Dictionary for storing a 'pan' and its associated transaction history
-
-	dict_pan_history = collections.defaultdict(list)	
-
-	with open(train_file) as f:
-		for row in f:
-			t = row.strip().split(",") 
-			dict_pan_history[t[0]]=t[1:]
-
-	return dict_pan_history
-
-# Read the evaluation file and compare the first n transactions against the Markov Chain expectations
-
-def evaluate_model(dict_pan_matrix,order):
-
-	dict_pan_results = collections.defaultdict(list)
-
-	print ""
-
-	with open(eval_file) as f:
-		for row in f:
-			values = row.strip().split(",")
-			pan = values[0]
-			chain = values[1:] 
-
-			model = dict_pan_matrix[pan]
-
-			if len(model) > 0: # The evaluation 'pan' was seen on the training phase
-
-				(mtx,row_code,col_code) = model
-
-				if order == 0: # Order 0 is interpreted as comparison against the most frequent value
-
-					top = top_freq_col(mtx) # Most frequent state for given 'pan'
-					correct = 0
-
-					if debug == 't':
-						print "Most frequent value: " , key_of_value(col_code,top)
-
-					for state in chain:
-						
-						if col_code[state] == top:
-							correct += 1
-
-					dict_pan_results[pan] = correct / len(chain)
-
-					if debug == 't':
-						print "Precision for pan: ", pan , " = " , correct / len(chain) , "\n"
-
-				else: # Order of Marvov Chain is >= 1
-
-					n = len(chain)-order # Number of n-tuples in chain
-
-					if n > 0:
-
-						correct = 0
-
-						for t in ntuples(chain,order+1):
-
-							row = row_code["".join(t[:order])] # State n
-							observed_col = col_code[t[order:][0]] # State n+1
-
-							if not row == [] and not observed_col == []: # If both states are on the matrix
-								predicted_col = index_of_max(mtx,row) # State n+1 with highest probability
-
-								if observed_col == predicted_col:
-									correct += 1
-
-						dict_pan_results[pan] = correct / n
-
-						if debug == 't':
-							print "Precision for pan: ", pan , " = " , correct / n , "\n"
-
-					else: # Not enough transactions
-
-						dict_pan_results[pan]= -1	
-
-			else: # New 'pan', not seen on training phase (card without transactions on training period)
-
-				# We should try to predict its next transaction with other means
-
-				if debug == 't':
-					print "pan: " , pan , " not seen on training"
-				#
-				# WORK TO DO
-				#
-				#
-
-	return dict_pan_results
 
 
 def save_results(dict_pan_results):
@@ -315,12 +253,15 @@ def save_results(dict_pan_results):
 	output_file.close
 
 
-
 ### =================================================================================
 
 # Creates a dictionary containing the transaction history of each card
 
+print ">Reading file"
+
 xml_history = minidom.parse(train_file)
+
+print ">Parsing file"
 
 parse_XML(xml_history)
 
