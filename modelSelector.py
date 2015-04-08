@@ -104,7 +104,7 @@ def plot_matrix(m,xpartition,ypartition,title,norm=False):
     plt.setp(labels, rotation=90)
     
     #plt.savefig(base_dir + fig_name
-    plt.savefig("../results/model0_x.png")
+    plt.savefig("../results/model0+1_x.png")
     #plt.show()
 
 def update_evaluation_matrix(mtx,counts,n,p,xpartition,ypartition):
@@ -128,27 +128,26 @@ def update_evaluation_matrix(mtx,counts,n,p,xpartition,ypartition):
 # Based on the characteristics of the transaction history of the card, the best
 # model is used to create the prediction
 
-def select_model(history):
-
-	h_size = len(history)
+def select_and_evaluate_model(history,n_t):
 
 	m0_max_history = 25 
-
 	m1_max_history = 1000
 
-	if h_size == 1: # 
-		print ""
+	if n_t == 1: # 
+		
+		return -1.0
 
-	elif h_size <= m0_max_history: # Model 0
+	elif n_t <= m0_max_history: # Model 0
 
-		precision += model0.evaluate(history[:n_t],history[n_t:])
+		return model0.evaluate(history[:n_t],history[n_t:])
 
-	elif h_size <= m1_max_history: # Model 0	
+	elif n_t <= m1_max_history: # Model 0	
 
-		precision += model1.evaluate(history[:n_t],history[n_t:],1)
+		return model1.evaluate(history[:n_t],history[n_t:],1)
 
 	else: # More than
-		print ""
+		
+		return -1.0
 
 	print ""
 
@@ -164,22 +163,24 @@ def parse_XML(doc):
 	precision = 0.0
 
 	m0_min_history = 1
-	m0_max_history = 20 # Average precision:  0.203688330522 for [1,20]
+	m0_max_history = 20
 
 	m1_min_history = 50
 	m1_max_history = 450
 
+	m_min_history = 0
+	m_max_history = 300
+
 	#####
 
-	delta = 25
-
-	levels = int(math.floor((m1_max_history-m1_min_history)/delta))
+	delta = 15
+	levels = int(math.floor((m_max_history-m_min_history)/delta))
 
 	mtx = np.zeros((levels,levels), dtype=np.float) - 1
 	counts = np.zeros((levels,levels), dtype=np.float)
 
-	min_range = range(m1_min_history,delta*levels+m1_min_history,delta)
-	max_range = range(m1_min_history+delta,delta*levels+m1_min_history+delta,delta)
+	min_range = range(m_min_history,delta*levels+m_min_history,delta)
+	max_range = range(m_min_history+delta,delta*levels+m_min_history+delta,delta)
 
 	#####
 
@@ -207,8 +208,8 @@ def parse_XML(doc):
 
 		# Model 0
 
-		if m0_min_history <= n_t <= m0_max_history and len(history) >= 2:
-			precision += model0.evaluate(history[:n_t],history[n_t:])
+		# if m0_min_history <= n_t <= m0_max_history and len(history) >= 2:
+		# 	precision += model0.evaluate(history[:n_t],history[n_t:])
 
 		# Model 1
 
@@ -218,7 +219,9 @@ def parse_XML(doc):
 		############################################################
 
 		if len(history)>2:
-			p = model0.evaluate(history[:n_t],history[n_t:])
+			#p = model0.evaluate(history[:n_t],history[n_t:])
+			p = select_and_evaluate_model(history,n_t)
+			precision += p
 			update_evaluation_matrix(mtx,counts,n_t,p,min_range,min_range)
 
 		############################################################
@@ -228,12 +231,12 @@ def parse_XML(doc):
 	sys.stdout.write("\tCurrent progress: %.2f %% of cards analyzed\r\n" % (100.00) )
 	sys.stdout.flush()
 
-	print "Average precision: " , precision / progress , " ( min-history = " , m1_min_history , ", max-history = " , m1_max_history, " )"
+	print "Average precision: " , precision / progress , " ( min-history = " , m_min_history , ", max-history = " , m_max_history, " )"
 
 	with warnings.catch_warnings():
 		warnings.filterwarnings("ignore", message="divide by zero encountered in TRUE_divide")
 		mtx = np.where(counts==0, -1, mtx/counts)
-	plot_matrix(mtx,max_range,min_range,"Model 0 results")
+	plot_matrix(mtx,max_range,min_range,"Model 0+1 results")
 
 
 
