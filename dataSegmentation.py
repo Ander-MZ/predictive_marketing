@@ -10,6 +10,7 @@ import collections
 import matplotlib
 import matplotlib.pyplot as plt
 import math
+import warnings
 
 ### =================================================================================
 
@@ -68,6 +69,9 @@ def assign_partition(value,partition):
 	while(i < len(partition)-1 and value > partition[i]):
 		i += 1
 
+	if value > partition[i]:       
+		i += 1
+		
 	return i-1
 	
 
@@ -214,6 +218,7 @@ def f():
 	# Initialize matrix with -1 to differentiate from 0 precision
 
 	mtx = np.zeros((levels,levels), dtype=np.float)-1
+	counts = np.zeros((levels,levels), dtype=np.float)
 
 	# values = [mean amount, number of transactions, precision of predictions]
 	for pan, values in d.items():
@@ -228,15 +233,19 @@ def f():
 			# Average of values on the bucket
 			if v >= 0:
 				if p >= 0:
-					nv = (v+p)/2
+					nv = v+p
 				else:
 					nv = v
 			else:
 				nv = p
 
+			counts[i,j] += 1
 			mtx[i,j] = nv
 
 	# Matrix, xlabels, ylabels 
+	with warnings.catch_warnings():
+		warnings.filterwarnings("ignore", message="divide by zero encountered in TRUE_divide")
+		mtx = np.where(counts==0, -1, mtx/counts)
 	plot_matrix(mtx,transaction_partition,amount_partition)
 
 	#print mtx
