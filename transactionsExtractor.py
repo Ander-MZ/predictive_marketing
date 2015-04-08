@@ -53,7 +53,15 @@ def dictionary_to_XML(d):
 	cards = []
 	append = cards.append
 
+	progress = 0
+
 	for pan, history in d.items():
+
+		progress += 1
+
+		if progress%1000==0:
+			sys.stdout.write("\tCurrent progress: %.2f %% of cards parsed\r" % (100*progress/len(d)) )
+			sys.stdout.flush()
 
 		card = Element('Card',PAN=pan)
 		transactions_list = SubElement(card, "Transactions")
@@ -66,6 +74,9 @@ def dictionary_to_XML(d):
 				node.set(columns[i],str(t[i]))
 
 		append(card)
+
+	sys.stdout.write("\tCurrent progress: %.2f %% of cards parsed\r\n" % (100.00) )
+	sys.stdout.flush()
 
 	top.extend(cards)
 	return top
@@ -99,29 +110,41 @@ columns = ['AMOUNT',
 		  'COM_ID']
 
 
-print "\tReading file"
+print ">Reading file"
 
 data = np.asarray(pd.read_csv(ifile,dtype=types))
 
-print "\tExtracting transactions"
+print ">Extracting transactions"
 
 # Group rows by 'pan' and then adds entry to dictionary for each pan & its 
 # associated values listed in chronological order (ascending)
 
 d = collections.defaultdict(list)
 
+progress = 0
+
 for key, grp in itertools.groupby(data, key=operator.itemgetter(0)):
+
+	progress += 1
+
+	if progress%1000==0:
+		sys.stdout.write("\tCurrent progress: %.2f %% of cards grouped\r" % (100*progress/len(data)) )
+		sys.stdout.flush()
+
 	d[key] = map(operator.itemgetter(range(1,len(types))),grp)
 
-print "\nCreating XML file"
+sys.stdout.write("\tCurrent progress: %.2f %% of cards grouped\r\n" % (100.00) )
+sys.stdout.flush()
+
+print ">Creating XML file"
 
 xml_result = dictionary_to_XML(d)
 
 #print prettify(xml_result)
 
-print "\nSaving file"
+print ">Saving file"
 
-tree = ElementTree.ElementTree(xml_result)
+tree = ElementTree(xml_result)
 
 tree.write(ofile)
 
