@@ -45,11 +45,11 @@ data = data[data>=0] # Remove -1 from the 'not found in training' cases
 
 n = len(data)
 
-print ("Predictions with precision = 0%% : %.2f %%" %  (100 * len(data[data==0.0]) / n) )
-print ("Predictions with precision > 0%% : %.2f %%" %  (100 * len(data[data>0.00]) / n) )
-print ("Predictions with precision > 25%% : %.2f %%" % (100 * len(data[data>0.25]) / n) )
-print ("Predictions with precision > 50%% : %.2f %%" % (100 * len(data[data>0.50]) / n) )
-print ("Predictions with precision > 75%% : %.2f %%" % (100 * len(data[data>0.75]) / n) )
+print "Predictions with precision = 0%% : %.2f %%" %  (100 * len(data[data==0.0]) / n) 
+print "Predictions with precision > 0%% : %.2f %%" %  (100 * len(data[data>0.00]) / n) 
+print "Predictions with precision > 25%% : %.2f %%" % (100 * len(data[data>0.25]) / n) 
+print "Predictions with precision > 50%% : %.2f %%" % (100 * len(data[data>0.50]) / n) 
+print "Predictions with precision > 75%% : %.2f %%" % (100 * len(data[data>0.75]) / n) 
 
 nx, xbins, ptchs = plt.hist(data, bins=20)
 plt.clf() # Get rid of this histogram since not the one we want.
