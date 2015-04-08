@@ -7,7 +7,7 @@ import time
 import collections
 import itertools
 import operator
-from xml.etree.ElementTree import Element, SubElement, Comment, tostring, ElementTree, ElementPath
+from xml.etree.cElementTree import Element, SubElement, Comment, tostring, ElementTree, ElementPath
 from xml.dom import minidom
 
 ### This class takes a list of transactions sorted by date, and then parses it
@@ -47,40 +47,6 @@ for o, a in myopts:
 
 ### =================================================================================
 
-def dictionary_to_XML(d):
-
-	top = Element('Data')
-	cards = []
-	append = cards.append
-
-	progress = 0
-
-	for pan, history in d.items():
-
-		progress += 1
-
-		if progress%1000==0:
-			sys.stdout.write("\tCurrent progress: %.2f %% of cards parsed\r" % (100*progress/len(d)) )
-			sys.stdout.flush()
-
-		card = Element('Card',PAN=pan)
-		transactions_list = SubElement(card, "Transactions")
-
-		# For each transaction of the card, create a node and add a tag for each attribute
-
-		for t in history:
-			node = SubElement(transactions_list, "T")
-			for i in range(len(t)):
-				node.set(columns[i],str(t[i]))
-
-		append(card)
-
-	sys.stdout.write("\tCurrent progress: %.2f %% of cards parsed\r\n" % (100.00) )
-	sys.stdout.flush()
-
-	top.extend(cards)
-	return top
-
 def prettify(elem):
     """Return a pretty-printed XML string for the Element.
     """
@@ -93,19 +59,13 @@ def prettify(elem):
 types = {'pan':'str',
 	  'amount':'float',
 	  'mcc':'str',
-	  'month':'int',
-	  'day':'int',
 	  'hour':'int',
-	  'min':'int',
 	  'dow':'int',
 	  'com_id':'str'}
 
 columns = ['AMOUNT',
 		  'MCC',
-		  'MONTH',
-		  'DAY',
 		  'HOUR',
-		  'MIN',
 		  'DOW',
 		  'COM_ID']
 
@@ -116,35 +76,44 @@ data = np.asarray(pd.read_csv(ifile,dtype=types))
 
 print ">Extracting transactions"
 
-# Group rows by 'pan' and then adds entry to dictionary for each pan & its 
-# associated values listed in chronological order (ascending)
-
-d = collections.defaultdict(list)
+# Group rows by 'pan' and then adds entry to XML tree
 
 progress = 0
+top = Element('Data')
+cards = []
+append = cards.append
 
-for key, grp in itertools.groupby(data, key=operator.itemgetter(0)):
+for pan, grp in itertools.groupby(data, key=operator.itemgetter(0)):
 
+	history = map(operator.itemgetter(range(1,len(types))),grp)
 	progress += 1
 
 	if progress%1000==0:
-		sys.stdout.write("\tCurrent progress: %.2f %% of cards grouped\r" % (100*progress/len(data)) )
+		sys.stdout.write("\tCurrent progress: %d cards grouped\r" % (progress) )
 		sys.stdout.flush()
 
-	d[key] = map(operator.itemgetter(range(1,len(types))),grp)
+	card = Element('Card',PAN=pan)
+	transactions_list = SubElement(card, "History")
 
-sys.stdout.write("\tCurrent progress: %.2f %% of cards grouped\r\n" % (100.00) )
+	# For each transaction of the card, create a node and add a tag for each attribute
+
+	for t in history:
+		node = SubElement(transactions_list, "T")
+		for i in range(len(t)):
+			node.set(columns[i],str(t[i]))
+
+	append(card)
+
+sys.stdout.write("\tCurrent progress: %d cards grouped\r\n" % (len(cards)) )
 sys.stdout.flush()
 
-print ">Creating XML file"
-
-xml_result = dictionary_to_XML(d)
+top.extend(cards)
 
 #print prettify(xml_result)
 
 print ">Saving file"
 
-tree = ElementTree(xml_result)
+tree = ElementTree(top)
 
 tree.write(ofile)
 
