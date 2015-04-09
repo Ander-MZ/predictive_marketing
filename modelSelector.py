@@ -201,7 +201,9 @@ def parse_XML(doc):
 	with warnings.catch_warnings():
 		warnings.filterwarnings("ignore", message="divide by zero encountered in TRUE_divide")
 		mtx = np.where(counts==0, -1, mtx/counts)
-	plot_matrix(mtx,max_range,min_range,"Model 0+1 results")
+	plot_matrix(mtx,max_range,min_range,"Assembly model results")
+
+	print "Evaluation completed!"
 
 
 def save_results(dict_pan_results):
