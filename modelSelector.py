@@ -21,29 +21,23 @@ import model1
 ### =================================================================================
 
 # Store input and output file names
-train_file=''
-eval_file=''
+history_file=''
 results_file=''
 alpha=0.75
-memory=1
 debug="f"
  
-# Read command line args (training file, evaluation file, results file, order of the chain, debug mode)
-myopts, args = getopt.getopt(sys.argv[1:],"t:e:r:o:a:")
+# Read command line args (training file, results file, proportion of history)
+myopts, args = getopt.getopt(sys.argv[1:],"i:o:a:")
  
 ###############################
 # o == option
 # a == argument passed to the o
 ###############################
 for o, a in myopts:
-    if o == '-t':
-        train_file=a
-    elif o == '-e':
-        eval_file=a
-    elif o == '-r':
-        results_file=a
+    if o == '-i':
+        history_file=a
     elif o == '-o':
-        memory=int(a)
+        results_file=a
     elif o == '-a':
         alpha=float(a)
     else:
@@ -104,7 +98,7 @@ def plot_matrix(m,xpartition,ypartition,title,norm=False):
     plt.setp(labels, rotation=90)
     
     #plt.savefig(base_dir + fig_name
-    plt.savefig("../results/model0+1_x.png")
+    plt.savefig("../results/months/model0+1_x.png")
     #plt.show()
 
 def update_evaluation_matrix(mtx,counts,n,p,xpartition,ypartition):
@@ -161,12 +155,6 @@ def parse_XML(doc):
 
 	progress = 0
 	precision = 0.0
-
-	m0_min_history = 1
-	m0_max_history = 20
-
-	m1_min_history = 50
-	m1_max_history = 450
 
 	m_min_history = 0
 	m_max_history = 300
@@ -248,7 +236,7 @@ def save_results(dict_pan_results):
 
 print ">Reading file"
 
-xml_history = minidom.parse(train_file)
+xml_history = minidom.parse(history_file)
 
 print ">Parsing file"
 
