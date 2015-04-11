@@ -121,10 +121,13 @@ def evaluate(trainingData, testData, order=1):
 			observed_col = col_code[t[order:][0]] # State n+1
 
 			if not row == [] and not observed_col == []: # If both states are on the matrix
-				
-				predicted_col = index_of_max(mtx,row) # State n+1 with highest probability
 
-				if observed_col == predicted_col:
+				if observed_col == index_of_max(mtx,row): # State n+1 with highest probability
+					correct += 1
+
+			elif row ==[] and not observed_col == []: # Sequence of business not in matrix
+
+				if observed_col == top_freq_col(mtx): # Most frequent state for given 'pan'
 					correct += 1
 
 	return correct / len(testData)
