@@ -123,18 +123,23 @@ def update_evaluation_matrix(mtx,counts,n,p,xpartition,ypartition):
 
 def select_and_evaluate_model(history,n_t):
 
-	m0_max_history = 1000 
-	m1_max_history = 100000
+	m0_max_history = 25 
+	m1_max_history = 1
+	m2_max_history = 1000
 
-	if n_t == 1: # 
+	if len(history) < 2: # Not enought data for training or testing
 		
-		return -1.0
+		return 0.0
 
 	elif n_t <= m0_max_history: # Model 0
 
 		return model0.evaluate(history[:n_t],history[n_t:])
 
-	elif n_t <= m1_max_history: # Model 0	
+	elif n_t <= m1_max_history: # Model 1 (Minimum history length = 9 with alpha = 0.75)	
+
+		return model1.evaluate(history[:n_t],history[n_t:],1)
+
+	elif n_t <= m2_max_history: # Model 2 (Minimum history length = 9 with alpha = 0.75)	
 
 		return model1.evaluate(history[:n_t],history[n_t:],1)
 
@@ -157,7 +162,7 @@ def parse_XML(doc):
 
 	#####
 
-	delta = 15
+	delta = 25
 	levels = int(math.floor((m_max_history-m_min_history)/delta))
 
 	mtx = np.zeros((levels,levels), dtype=np.float) - 1
@@ -184,13 +189,11 @@ def parse_XML(doc):
 		for t in card.find('History'):
 			history.append(t.attrib.get('COM_ID'))
 
-		n = len(history)
-		n_t = int(math.floor(alpha*n))
+		n_t = int(math.floor(alpha*len(history)))
 
-		if len(history)>2:
-			p = select_and_evaluate_model(history,n_t)
-			precision += p
-			update_evaluation_matrix(mtx,counts,n_t,p,min_range,min_range)
+		p = select_and_evaluate_model(history,n_t)
+		precision += p
+		update_evaluation_matrix(mtx,counts,n_t,p,min_range,min_range)
 
 
 	sys.stdout.write("\tCurrent progress: %.2f %% of cards analyzed\r\n" % (100.00) )
