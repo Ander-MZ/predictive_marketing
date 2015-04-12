@@ -5,7 +5,9 @@ import collections
 import sys, getopt
 from itertools import izip, islice, product
 import scipy.sparse as sps
-from xml.etree import cElementTree
+from xml.etree.cElementTree import Element, SubElement, Comment, tostring, ElementTree, ElementPath
+from xml.dom import minidom
+
 import math
 import matplotlib
 import matplotlib.pyplot as plt
@@ -97,7 +99,7 @@ def plot_matrix(m,xpartition,ypartition,title,norm=False):
     plt.setp(labels, rotation=90)
     
     #plt.savefig(base_dir + fig_name
-    plt.savefig("../results/months/model0+1_test.png")
+    plt.savefig("../results/months/model0+1.png")
     #plt.show()
 
 def update_evaluation_matrix(mtx,counts,n,p,xpartition,ypartition):
@@ -149,6 +151,9 @@ def select_and_evaluate_model(history,n_t):
 
 def parse_XML(doc):
 
+	d = collections.defaultdict(list)
+	cards = doc.getElementsByTagName('Card')
+
 	progress = 0
 	precision = 0.0
 
@@ -168,8 +173,6 @@ def parse_XML(doc):
 
 	#####
 
-	cards = doc.getroot()
-
 	for card in cards:
 
 		progress += 1
@@ -178,20 +181,27 @@ def parse_XML(doc):
 			sys.stdout.write("\tCurrent progress: %.2f %% of cards analyzed\r" % (100*progress/len(cards)) )
 			sys.stdout.flush()
 
-		pan = card.attrib.get('PAN')
+		pan = card.getAttribute('PAN')
+		transactions = card.getElementsByTagName('T')
 		history = []
-
-		for t in card.find('History'):
-			history.append(t.attrib.get('COM_ID'))
-
-		n = len(history)
+		n = len(transactions)
 		n_t = int(math.floor(alpha*n))
+		n_e = n - n_t
+
+		#print "Number of transactions: %d (%d -> training, %d -> evaluation)" % (n,n_t,n_e)
+
+		for t in transactions:
+			for attrName, attrValue in t.attributes.items():
+				if attrName == "COM_ID":
+					history.append(str(attrValue))		
 
 		if len(history)>2:
+			#p = model0.evaluate(history[:n_t],history[n_t:])
 			p = select_and_evaluate_model(history,n_t)
 			precision += p
 			update_evaluation_matrix(mtx,counts,n_t,p,min_range,min_range)
 
+		#d[pan] = history
 
 	sys.stdout.write("\tCurrent progress: %.2f %% of cards analyzed\r\n" % (100.00) )
 	sys.stdout.flush()
@@ -201,9 +211,8 @@ def parse_XML(doc):
 	with warnings.catch_warnings():
 		warnings.filterwarnings("ignore", message="divide by zero encountered in TRUE_divide")
 		mtx = np.where(counts==0, -1, mtx/counts)
-	plot_matrix(mtx,max_range,min_range,"Assembly model results")
+	plot_matrix(mtx,max_range,min_range,"Model 0+1 results")
 
-	print "Evaluation completed!"
 
 
 def save_results(dict_pan_results):
@@ -228,11 +237,11 @@ def save_results(dict_pan_results):
 
 print ">Reading file"
 
-tree = cElementTree.parse(history_file)
+xml_history = minidom.parse(history_file)
 
 print ">Parsing file"
 
-parse_XML(tree)
+parse_XML(xml_history)
 
 # dict_pan_history = read_train_file()
 
