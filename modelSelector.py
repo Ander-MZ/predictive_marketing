@@ -107,7 +107,7 @@ def select_and_evaluate_model(history,n_t):
 
 	elif n_t <= m2_max_history: # Model 2 (Minimum history length = 9 with alpha = 0.75)	
 
-		return model1.evaluate(history[:n_t],history[n_t:],1)
+		return model2.evaluate(history[:n_t],history[n_t:],2)
 
 	else: # More than
 		
@@ -173,9 +173,9 @@ def parse_XML(doc):
 		warnings.filterwarnings("ignore", message="divide by zero encountered in TRUE_divide")
 		mtx = np.where(counts==0, -1, mtx/counts)
 
-	plotter.plot_matrix(mtx,max_range,min_range,"Assembly model results","../results/model0+1+2_matrix.png")
+	plotter.plot_matrix(mtx,max_range,min_range,"Assembly model results","../results/model_2_matrix.png")
 
-	plotter.plot_histogram(np.asarray(results),"Assembly model results","../results/model0+1+2_histogram.png")
+	plotter.plot_histogram(np.asarray(results),"Assembly model results","../results/model_2_histogram.png")
 
 	print "Evaluation completed!"
 
