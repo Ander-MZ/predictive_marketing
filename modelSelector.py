@@ -16,6 +16,9 @@ import warnings
 import model0
 import model1
 
+# Utils
+
+import plotter
 
 ### =================================================================================
 
@@ -62,43 +65,7 @@ def assign_partition(value,partition):
 
 	return i-1
 
-def plot_matrix(m,xpartition,ypartition,title,norm=False):
-
-    # Normalize values between 0 and 1
-    if norm:
-        cm = m.astype(float)
-        for i in range(cm.shape[0]):
-            total = cm[i].sum()
-            for j in range(cm.shape[1]):
-                cm[i,j]=cm[i,j]/total
-        m=cm
-
-    if ypartition[0]==0:
-    	ypartition[0]=1
-
-    xtags = map(str,xpartition)
-    ytags = map(str,ypartition)
-
-    # Set up a colormap:
-    #palette = matplotlib.cm.RdYlGn
-    palette = matplotlib.cm.jet
-    palette.set_under('gray', 1.0)
-
-    plt.matshow(m,vmin=0,vmax=1,cmap=palette)
-    plt.title(title+'\n')
-    plt.colorbar()
-    
-
-    plt.ylabel('Min history')
-    plt.xlabel('Max history')
-    plt.xticks(range(len(xtags)),xtags)
-    plt.yticks(range(len(ytags)),ytags)
-    locs, labels = plt.xticks()
-    plt.setp(labels, rotation=90)
-    
-    #plt.savefig(base_dir + fig_name
-    plt.savefig("../results/months/model0+1_test.png")
-    #plt.show()
+# Updates the matrix containing the results of all evaluations
 
 def update_evaluation_matrix(mtx,counts,n,p,xpartition,ypartition):
 	i = assign_partition(n,ypartition) # Min
@@ -117,14 +84,13 @@ def update_evaluation_matrix(mtx,counts,n,p,xpartition,ypartition):
 	counts[i,j] += 1
 	mtx[i,j] = nv
 
-
 # Based on the characteristics of the transaction history of the card, the best
 # model is used to create the prediction
 
 def select_and_evaluate_model(history,n_t):
 
 	m0_max_history = 25 
-	m1_max_history = 1
+	m1_max_history = 1000
 	m2_max_history = 1000
 
 	if len(history) < 2: # Not enought data for training or testing
@@ -156,6 +122,7 @@ def parse_XML(doc):
 
 	progress = 0
 	precision = 0.0
+	results = []
 
 	m_min_history = 0
 	m_max_history = 300
@@ -193,18 +160,22 @@ def parse_XML(doc):
 
 		p = select_and_evaluate_model(history,n_t)
 		precision += p
+		results.append(p)
 		update_evaluation_matrix(mtx,counts,n_t,p,min_range,min_range)
 
 
 	sys.stdout.write("\tCurrent progress: %.2f %% of cards analyzed\r\n" % (100.00) )
 	sys.stdout.flush()
 
-	print "Average precision: " , precision / progress , " ( min-history = " , m_min_history , ", max-history = " , m_max_history, " )"
+	print "Average precision: " , precision / progress , " ( min-history = " , min(1,m_min_history) , ", max-history = " , m_max_history, " )"
 
 	with warnings.catch_warnings():
 		warnings.filterwarnings("ignore", message="divide by zero encountered in TRUE_divide")
 		mtx = np.where(counts==0, -1, mtx/counts)
-	plot_matrix(mtx,max_range,min_range,"Assembly model results")
+
+	plotter.plot_matrix(mtx,max_range,min_range,"Assembly model results","../results/model0+1+2_matrix.png")
+
+	plotter.plot_histogram(np.asarray(results),"Assembly model results","../results/model0+1+2_histogram.png")
 
 	print "Evaluation completed!"
 
