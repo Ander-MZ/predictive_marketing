@@ -13,7 +13,13 @@ import scipy.sparse as sps
 # in = [1,2,3,4,5] and n = 3 then out = [(1,2,3),(2,3,4),(3,4,5)]
 
 def ntuples(lst, n):
-    return zip(*[lst[i:]+lst[:i] for i in range(n)])[:(-n+1)]
+	if n == 1:
+		tuples = []
+		for elem in lst:
+			tuples.append((elem,))
+		return tuples
+	else:
+		return zip(*[lst[i:]+lst[:i] for i in range(n)])[:(-n+1)]
 
 # Receives a sparse matrix and a row index, and returns the col index of the max value in that row
 
@@ -42,24 +48,28 @@ def create_sparse_matrix(chain,order):
 	row_code = collections.defaultdict(list)
 	col_code = collections.defaultdict(list)
 	states = set(chain)
-	
-	# Calculate the ratio transitions/states
+	rows = set()
 
-	r = (len(chain)-1)/len(states)
+	# Generate a numerical index for each combination of states seen on chain
 
-	# Generate a numerical index for each combination of states
+	for t in ntuples(chain,order):
+		rows.add(t)
 
 	index = 0
 
-	for p in product(sorted(states),repeat=max(order,1)):
-		row_code["".join(p)]=index	
+	for t in rows:
+		row_code[t]=index
 		index += 1
+
+	# for p in product(sorted(states),repeat=max(order,1)):
+	# 	row_code["".join(p)]=index	
+	# 	index += 1
 
 	# Generate a numerical index for each state
 
 	index = 0
 
-	for element in sorted(states):
+	for element in states:
 		col_code[element]=index
 		index += 1
 
@@ -74,13 +84,13 @@ def create_sparse_matrix(chain,order):
 	# Duplicate entries are summed together
 
 	for t in ntuples(chain,order+1):
-		append_row(row_code["".join(t[:order])])
+		append_row(row_code[t[:order]])
 		append_col(col_code[t[order:][0]])
 		append_f(1) 
 
 	# Create a sparse matrix in 'coo' format with # rows = (states^order) and # cols = states 
 
-	mtx = sps.coo_matrix((f, (row, col)), shape=(len(states)**order, len(states)))
+	mtx = sps.coo_matrix((f, (row, col)), shape=(len(rows), len(states)))
 
 	# Transform matrix into Compressed Sparse Row format to allow arithmetic manipulation and slicing
 
@@ -92,8 +102,7 @@ def create_sparse_matrix(chain,order):
 	#row_indices, col_indices = mtx.nonzero()
 	#mtx.data = mtx.data / row_sums[row_indices]
 
-
-	#print "Density: " , mtx.nnz/len(states)**(order+1)
+	#print "Density: " , mtx.nnz/len(rows)
 	#np.savetxt(("../results/matrices/" + str(pan) + ".csv"), matrix, delimiter=",",fmt='%.4f')
 
 	return (mtx,row_code,col_code)
@@ -117,7 +126,7 @@ def evaluate(trainingData, testData, order=1):
 
 		for t in ntuples(trainingData[len(trainingData)-order:]+testData,order+1):
 
-			row = row_code["".join(t[:order])] # State n
+			row = row_code[t[:order]] # State n
 			observed_col = col_code[t[order:][0]] # State n+1
 
 			if not row == [] and not observed_col == []: # If both states are on the matrix
@@ -139,4 +148,3 @@ def predict(history):
 	print ""
 
 ### =================================================================================
-
