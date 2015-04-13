@@ -111,6 +111,8 @@ def create_sparse_matrix(chain,order):
 # Receives a list with the training data (visited MCC / COM_ID) and a list of test data 
 # (visited MCC / COM_ID) on the next period, and returns a score between 0 and 1 for the prediction
 
+# NOTE: Minimum test data: 2 elements
+
 def evaluate(trainingData, testData, order=1):
 
 	(mtx,row_code,col_code) = create_sparse_matrix(trainingData,order)
