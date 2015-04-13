@@ -90,7 +90,7 @@ def update_evaluation_matrix(mtx,counts,n,p,xpartition,ypartition):
 def select_and_evaluate_model(history,n_t):
 
 	m0_max_history = 25 
-	m1_max_history = 1000
+	m1_max_history = 1
 	m2_max_history = 1000
 
 	if len(history) < 2: # Not enought data for training or testing
@@ -207,12 +207,3 @@ tree = cElementTree.parse(history_file)
 print ">Parsing file"
 
 parse_XML(tree)
-
-# dict_pan_history = read_train_file()
-
-# for 
-
-# if not eval_file == '':
-# 	dict_pan_results = evaluate_model(dict_pan_matrix,memory)
-
-# save_results(dict_pan_results)
