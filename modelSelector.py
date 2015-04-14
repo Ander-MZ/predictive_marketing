@@ -15,6 +15,7 @@ import warnings
 
 import model0
 import model1
+import model2
 
 # Utils
 
@@ -125,7 +126,7 @@ def parse_XML(doc):
 	results = []
 
 	m_min_history = 0
-	m_max_history = 300
+	m_max_history = 500
 
 	#####
 
