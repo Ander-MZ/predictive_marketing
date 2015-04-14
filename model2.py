@@ -118,6 +118,17 @@ def evaluate(trainingData, testData, order=2):
 				if observed_col == index_of_max(mtx,row): # State n+1 with highest probability
 					correct += 1
 
+			###  ================  MAXIMUM LIKELIHOOD ESTIMATION  ==================== ###
+
+			# Given that the N-gram 't' has never been seen before, we proceed to estimate the
+			# most probable business for it, analyzing the individual business it contains.
+
+			# P(X | C1,C2,...,Cn) = P(X | C1) + P(X | C2) + ... + P(X | Cn) - P(X | C1 & C2 & ... & Cn)
+
+			# However, as {C1 & C2 & ... & Cn} has has never been seen before, P(X | C1 & C2 & ... & Cn) = 0, so:
+
+			# P(X | C1,C2,...,Cn) = P(X | C1) + P(X | C2) + ... + P(X | Cn)
+
 			elif row ==[] and not observed_col == []: # Sequence of business not in matrix
 
 				if observed_col == top_freq_col(mtx): # Most frequent state for given 'pan'
