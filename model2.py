@@ -127,36 +127,62 @@ def evaluate(trainingData, testData, order=2):
 
 	correct = 0
 
+	k = 0
+
 	if n > 0:
 
 		# We add the last 'order' elements from training data to allow a prediction for
 		# the first element on the test data
 
+		# dictionary for storing previously computed results
+
+		database = collections.defaultdict(list)
+
+		s_mtx = create_support_mtx(mtx,row_code,col_code)
+
 		for t in ntuples(trainingData[len(trainingData)-order:]+testData,order+1):
 
-			row = row_code[frozenset(t[:order])] # State n
-			observed_col = col_code[t[order:][0]] # State n+1
+			if not database[t[:order]] == []: # Value previously computed
 
-			if not row == [] and not observed_col == []: # If both states are on the matrix
+				k += 1
 
-				if observed_col == index_of_max(mtx,row): # State n+1 with highest probability
+				if col_code[t[order:][0]] == database[t[:order]]: # If observed col equals prediction
 					correct += 1
 
-			###  ================  MAXIMUM LIKELIHOOD ESTIMATION  ==================== ###
+			else:
 
-			# Given that the N-gram 't' has never been seen before, we proceed to estimate the
-			# most probable business for it, analyzing the individual business it contains.
+				row = row_code[t[:order]] # Index of state n
+				observed_col = col_code[t[order:][0]] # Index of state n+1
 
-			# P(X | C1,C2,...,Cn) = P(X | C1) + P(X | C2) + ... + P(X | Cn) - P(X | C1 & C2 & ... & Cn)
+				if not row == [] and not observed_col == []: # If both states are on the matrix
 
-			# However, as {C1 & C2 & ... & Cn} has has never been seen before, P(X | C1 & C2 & ... & Cn) = 0, so:
+					index = index_of_max(mtx,row)
+		
+					if observed_col == index: # State n+1 with highest probability
+						correct += 1
 
-			# P(X | C1,C2,...,Cn) = P(X | C1) + P(X | C2) + ... + P(X | Cn)
+				elif row ==[] and not observed_col == []: # Sequence of business not in matrix
 
-			elif row ==[] and not observed_col == []: # Sequence of business not in matrix
+					# Given that the N-gram 't' has never been seen before, we proceed to estimate the
+					# most probable business for it, analyzing the individual business it contains.
 
-				if observed_col == top_freq_col(mtx): # Most frequent state for given 'ngram'
-					correct += 1
+					# P(X | C1,C2,...,Cn) is proportional to P(X | C1) + P(X | C2) + ... + P(X | Cn)
+
+					rows = []
+
+					# Obtain equivalent col index of each individual state on ngram
+					for r in t[:order]:
+						rows.append(col_code[r]) 
+
+					# Gets the column with the highest accumulated probabilities
+					predicted_col = np.argmax(s_mtx[rows.sort(),:])
+
+					index = predicted_col
+
+					if observed_col == predicted_col: # Most frequent state for given 'ngram'
+						correct += 1
+
+				database[t[:order]] = index
 
 	return correct / len(testData)
 
