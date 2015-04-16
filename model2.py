@@ -131,26 +131,24 @@ def evaluate(trainingData, testData, order=2):
 
 	correct = 0
 
-	k = 0
-
 	if n > 0:
 
 		# We add the last 'order' elements from training data to allow a prediction for
 		# the first element on the test data
 
 		# dictionary for storing previously computed results
-
 		database = collections.defaultdict(list)
 
+		# Matrix for conditional probability calculations
 		s_mtx = create_support_mtx(mtx,row_code,col_code)
 
 		for t in ntuples(trainingData[len(trainingData)-order:]+testData,order+1):
 
-			if not database[t[:order]] == []: # Value previously computed
+			ngram = frozenset(t[:order])
 
-				k += 1
+			if not database[ngram] == []: # Value previously computed
 
-				if col_code[t[order:][0]] == database[t[:order]]: # If observed col equals prediction
+				if col_code[t[order:][0]] == database[ngram]: # If observed col equals prediction
 					correct += 1
 
 			else:
@@ -165,7 +163,7 @@ def evaluate(trainingData, testData, order=2):
 					if observed_col == index: # State n+1 with highest probability
 						correct += 1
 
-					database[t[:order]] = index
+					database[ngram] = index
 
 				elif row ==[] and not observed_col == []: # Sequence of business not in matrix
 
@@ -188,7 +186,7 @@ def evaluate(trainingData, testData, order=2):
 					if observed_col == predicted_col: # Most frequent state for given 'ngram'
 						correct += 1
 
-					database[t[:order]] = index
+					database[ngram] = index
 
 	return correct / len(testData)
 
