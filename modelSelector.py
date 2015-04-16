@@ -23,6 +23,8 @@ import plotter
 
 ### =================================================================================
 
+name = "2"
+
 # Store input and output file names
 history_file=''
 results_file=''
@@ -174,9 +176,9 @@ def parse_XML(doc):
 		warnings.filterwarnings("ignore", message="divide by zero encountered in TRUE_divide")
 		mtx = np.where(counts==0, -1, mtx/counts)
 
-	plotter.plot_matrix(mtx,max_range,min_range,"Assembly model results","../results/model_2_matrix.png")
+	plotter.plot_matrix(mtx,max_range,min_range,"Model " + name + " precision","../results/model_"+name+"_matrix.png")
 
-	plotter.plot_histogram(np.asarray(results),"Assembly model results","../results/model_2_histogram.png")
+	plotter.plot_histogram(np.asarray(results),"Model " + name + " precision","../results/model_"+name+"_histogram.png")
 
 	print "Evaluation completed!"
 
