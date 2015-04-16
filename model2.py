@@ -95,6 +95,24 @@ def create_sparse_matrix(chain,order):
 
 	return (mtx.tocsr(),row_code,col_code)
 
+# Create a matrix with the condensed transition probability of each individual state
+
+def create_support_mtx(m,row_code,col_code):
+
+	states = col_code.values()
+	n = len(states)
+
+	mtx = np.zeros((n,n), dtype=np.float)
+
+	for next_state, j in col_code.items():
+		for current_state in states:
+			p = 0
+			for ngram, i in row_code.items():
+				if current_state in ngram:
+					p += m.todense()[i,j]
+			mtx[j,j] = p / m.sum(axis=0)[0,j] # sum returns array of 1 x n
+
+	return mtx
 
 # Receives a list with the training data (visited MCC / COM_ID) and a list of test data 
 # (visited MCC / COM_ID) on the next period, and returns a score between 0 and 1 for the prediction
