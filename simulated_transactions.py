@@ -1,4 +1,10 @@
 
+# 3 different business
+
+def chain20():
+	return ["B", "A", "A", "B", "A", "B", "B", "A", "C", "B", "B", "B", "C", "B", \
+		"B", "C", "C", "C", "A", "C", "A"]
+
 # 4 different business
 
 def chain25(): 
