@@ -13,7 +13,13 @@ import scipy.sparse as sps
 # in = [1,2,3,4,5] and n = 3 then out = [(1,2,3),(2,3,4),(3,4,5)]
 
 def ntuples(lst, n):
-    return zip(*[lst[i:]+lst[:i] for i in range(n)])[:(-n+1)]
+	if n == 1:
+		tuples = []
+		for elem in lst:
+			tuples.append((elem,))
+		return tuples
+	else:
+		return zip(*[lst[i:]+lst[:i] for i in range(n)])[:(-n+1)]
 
 # Receives a sparse matrix and a row index, and returns the col index of the max value in that row
 
@@ -131,7 +137,7 @@ def evaluate(trainingData, testData, order=2):
 
 			elif row ==[] and not observed_col == []: # Sequence of business not in matrix
 
-				if observed_col == top_freq_col(mtx): # Most frequent state for given 'pan'
+				if observed_col == top_freq_col(mtx): # Most frequent state for given 'ngram'
 					correct += 1
 
 	return correct / len(testData)
