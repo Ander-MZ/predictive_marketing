@@ -110,7 +110,11 @@ def create_support_mtx(m,row_code,col_code):
 			for ngram, i in row_code.items():
 				if current_state in ngram:
 					p += m.todense()[i,j]
-			mtx[j,j] = p / m.sum(axis=0)[0,j] # sum returns array of 1 x n
+			s = m.sum(axis=0)[0,j] # sum returns array of 1 x n, then index 'j' is selected
+			if s > 0:
+				mtx[j,j] = p / s
+			else:
+				mtx[j,j] = 0.0
 
 	return mtx
 
@@ -161,6 +165,8 @@ def evaluate(trainingData, testData, order=2):
 					if observed_col == index: # State n+1 with highest probability
 						correct += 1
 
+					database[t[:order]] = index
+
 				elif row ==[] and not observed_col == []: # Sequence of business not in matrix
 
 					# Given that the N-gram 't' has never been seen before, we proceed to estimate the
@@ -182,7 +188,7 @@ def evaluate(trainingData, testData, order=2):
 					if observed_col == predicted_col: # Most frequent state for given 'ngram'
 						correct += 1
 
-				database[t[:order]] = index
+					database[t[:order]] = index
 
 	return correct / len(testData)
 
