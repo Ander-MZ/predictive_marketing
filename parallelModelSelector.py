@@ -28,7 +28,7 @@ import plotter
 
 # Global Variables
 
-modelName = "2_multi"
+modelName = "2"
 progress = 0
 total = 0
 
@@ -108,7 +108,7 @@ def update_evaluation_matrix(mtx,counts,results,xpartition,ypartition):
 
 def select_and_evaluate_model(history,n_t):
 
-	m0_max_history = 25 
+	m0_max_history = 25
 	m1_max_history = 1
 	m2_max_history = 1000
 
