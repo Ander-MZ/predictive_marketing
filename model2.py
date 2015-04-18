@@ -95,28 +95,6 @@ def create_sparse_matrix(chain,order):
 
 	return (mtx.tocsr(),row_code,col_code)
 
-# Create a matrix with the condensed transition probability of each individual state
-
-def create_support_mtx(m,row_code,col_code):
-
-	states = col_code.values()
-	n = len(states)
-
-	mtx = np.zeros((n,n), dtype=np.float)
-
-	for next_state, j in col_code.items():
-		for current_state in states:
-			p = 0
-			for ngram, i in row_code.items():
-				if current_state in ngram:
-					p += m.todense()[i,j]
-			s = m.sum(axis=0)[0,j] # sum returns array of 1 x n, then index 'j' is selected
-			if s > 0:
-				mtx[j,j] = p / s
-			else:
-				mtx[j,j] = 0.0
-
-	return mtx
 
 # Receives a list with the training data (visited MCC / COM_ID) and a list of test data 
 # (visited MCC / COM_ID) on the next period, and returns a score between 0 and 1 for the prediction
@@ -136,57 +114,20 @@ def evaluate(trainingData, testData, order=2):
 		# We add the last 'order' elements from training data to allow a prediction for
 		# the first element on the test data
 
-		# dictionary for storing previously computed results
-		database = collections.defaultdict(list)
-
-		# Matrix for conditional probability calculations
-		s_mtx = create_support_mtx(mtx,row_code,col_code)
-
 		for t in ntuples(trainingData[len(trainingData)-order:]+testData,order+1):
 
-			ngram = frozenset(t[:order])
+			row = row_code[frozenset(t[:order])] # State n
+			observed_col = col_code[t[order:][0]] # State n+1
 
-			if not database[ngram] == []: # Value previously computed
+			if not row == [] and not observed_col == []: # If both states are on the matrix
 
-				if col_code[t[order:][0]] == database[ngram]: # If observed col equals prediction
+				if observed_col == index_of_max(mtx,row): # State n+1 with highest probability
 					correct += 1
 
-			else:
+			elif row ==[] and not observed_col == []: # Sequence of business not in matrix
 
-				row = row_code[t[:order]] # Index of state n
-				observed_col = col_code[t[order:][0]] # Index of state n+1
-
-				if not row == [] and not observed_col == []: # If both states are on the matrix
-
-					index = index_of_max(mtx,row)
-		
-					if observed_col == index: # State n+1 with highest probability
-						correct += 1
-
-					database[ngram] = index
-
-				elif row ==[] and not observed_col == []: # Sequence of business not in matrix
-
-					# Given that the N-gram 't' has never been seen before, we proceed to estimate the
-					# most probable business for it, analyzing the individual business it contains.
-
-					# P(X | C1,C2,...,Cn) is proportional to P(X | C1) + P(X | C2) + ... + P(X | Cn)
-
-					rows = []
-
-					# Obtain equivalent col index of each individual state on ngram
-					for r in t[:order]:
-						rows.append(col_code[r]) 
-
-					# Gets the column with the highest accumulated probabilities
-					predicted_col = np.argmax(s_mtx[rows.sort(),:])
-
-					index = predicted_col
-
-					if observed_col == predicted_col: # Most frequent state for given 'ngram'
-						correct += 1
-
-					database[ngram] = index
+				if observed_col == top_freq_col(mtx): # Most frequent state for given 'ngram'
+					correct += 1
 
 	return correct / len(testData)
 
@@ -197,4 +138,3 @@ def predict(history):
 	print ""
 
 ### =================================================================================
-
