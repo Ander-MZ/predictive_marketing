@@ -10,7 +10,8 @@ import math
 import matplotlib
 import matplotlib.pyplot as plt
 import warnings
-import multiprocessing as mp
+from multiprocessing import Pool, Value
+import time
 
 # Models
 
@@ -31,6 +32,8 @@ import plotter
 modelName = "2"
 progress = 0
 total = 0
+
+counter = None
 
 # Store input and output file names
 history_file=''
@@ -108,9 +111,9 @@ def update_evaluation_matrix(mtx,counts,results,xpartition,ypartition):
 
 def select_and_evaluate_model(history,n_t):
 
-	m0_max_history = 25
+	m0_max_history = 1000
 	m1_max_history = 1
-	m2_max_history = 1000
+	m2_max_history = 1
 
 	if len(history) < 2: # Not enought data for training or testing
 		
@@ -134,10 +137,19 @@ def select_and_evaluate_model(history,n_t):
 
 	print ""
 
+# Prepares global counter for use within processes
+
+def init(args):
+    global counter
+    counter = args
+
 # Receives an XML node with all the cards and returns a list containing 
 # the history of transactions of each card
 
 def extract_history(cards):
+
+	global counter
+	counter.value += 1
 
 	results = []
 
@@ -160,12 +172,6 @@ def exec_task(history):
 
 	global progress
 	global total
-
-	progress += 1
-
-	if progress%1000==0:
-		sys.stdout.write("\tCurrent progress: %.2f %% of cards analyzed\r" % (100*progress/total) )
-		sys.stdout.flush()
 
 	n_t = int(math.floor(alpha*len(history)))
 
@@ -201,12 +207,25 @@ def parse_XML(doc):
 	global total
 	total = len(cards)
 
+	global counter
+	counter = Value('i', 0)
+
 	# Executes card history evaluation in parallel
-	pool = mp.Pool(processes=8)
-	results = pool.map(exec_task, extract_history(cards))
+	pool = Pool(processes=8, initializer = init, initargs = (counter, ))
+	rs = pool.map_async(exec_task, extract_history(cards), chunksize = 1)
+
+	while(True):
+		if (rs.ready()): 
+		    break
+		remaining = rs._number_left
+		sys.stdout.write("\tCurrent progress: %.2f %% of cards analyzed\r" % (100*(total-remaining)/total) )
+		sys.stdout.flush()
+
+		time.sleep(0.1)
+
+	rs.wait()
 	
-	pool.close()
-	pool.join()
+	results = rs.get()
 
 	mtx = update_evaluation_matrix(mtx,counts,results,min_range,min_range)
 
