@@ -187,8 +187,8 @@ def fast_iter(context, *args, **kwargs):
 		warnings.filterwarnings("ignore", message="divide by zero encountered in TRUE_divide")
 		mtx = np.where(counts==0, -1, mtx/counts)
 
-	# plotter.plot_matrix(mtx,max_range,min_range,"Model " + modelName + " precision","../results/model_" + modelName + "_matrix.png")
-	# plotter.plot_histogram(np.asarray(results),"Model " + modelName + " precision","../results/model_" + modelName + "_histogram.png")
+	plotter.plot_matrix(mtx,max_range,min_range,"Model " + modelName + " precision","../results/model_" + modelName + "_matrix.png")
+	plotter.plot_histogram(np.asarray(results),"Model " + modelName + " precision","../results/model_" + modelName + "_histogram.png")
 
 	print "Evaluation completed!"
 
@@ -216,9 +216,6 @@ t0 = millis = int(round(time.time() * 1000))
 
 context = ET.iterparse(history_file, tag='Card' )
 fast_iter(context)
-
-# context = cElementTree.parse(history_file)
-# parse_XML(tree)
 
 t1 = millis = int(round(time.time() * 1000))
 
