@@ -101,10 +101,6 @@ def update_evaluation_matrix(mtx,counts,n,p,xpartition,ypartition):
 
 def select_and_evaluate_model(history,n_t):
 
-	m0_max_history = 1000
-	m1_max_history = 1
-	m2_max_history = 1
-
 	if len(history) < 2: # Not enought data for training or testing
 		
 		return 0.0
@@ -149,33 +145,41 @@ def fast_iter(context, *args, **kwargs):
 
 	###
 
-	for event, elem in context:
+	while True:
 
-		progress += 1
+		try:
 
-		if progress%1000==0:
-			sys.stdout.write("\tCurrent progress: %d cards analyzed\r" % (progress) )
-			sys.stdout.flush()
+			for event, elem in context:
 
-		pan = elem.attrib.get('PAN')
-		history = []
-		for t in elem.find('History'):
-			history.append(t.attrib.get('COM_ID'))
+				progress += 1
+
+				if progress%1000==0:
+					sys.stdout.write("\tCurrent progress: %d cards analyzed\r" % (progress) )
+					sys.stdout.flush()
+
+				pan = elem.attrib.get('PAN')
+				history = []
+				for t in elem.find('History'):
+					history.append(t.attrib.get('COM_ID'))
 
 
-		n_t = int(math.floor(alpha*len(history)))
-		p = select_and_evaluate_model(history,n_t)
-		precision += p
-		results.append(p)
-		update_evaluation_matrix(mtx,counts,n_t,p,min_range,min_range)
+				n_t = int(math.floor(alpha*len(history)))
+				p = select_and_evaluate_model(history,n_t)
+				precision += p
+				results.append(p)
+				update_evaluation_matrix(mtx,counts,n_t,p,min_range,min_range)
 
-		# It's safe to call clear() here because no descendants will be
-		# accessed
-		elem.clear()
-		# Also eliminate now-empty references from the root node to elem
-		for ancestor in elem.xpath('ancestor-or-self::*'):
-			while ancestor.getprevious() is not None:
-				del ancestor.getparent()[0]
+				# It's safe to call clear() here because no descendants will be
+				# accessed
+				elem.clear()
+				# Also eliminate now-empty references from the root node to elem
+				for ancestor in elem.xpath('ancestor-or-self::*'):
+					while ancestor.getprevious() is not None:
+						del ancestor.getparent()[0]
+
+		except (ET.XMLSyntaxError, StopIteration):
+			break
+
 	del context
 
 	sys.stdout.write("\tCurrent progress: %d cards analyzed\r\n" % (progress) )
