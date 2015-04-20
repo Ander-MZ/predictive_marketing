@@ -145,6 +145,36 @@ def evaluate(trainingData, testData, order=1):
 
 # Receives a transaction history and returns the most probable MCC / COM_ID of the next transaction
 
+def evaluate2(trainingData, testData, order=1):
+
+	(mtx,row_code,col_code) = create_sparse_matrix(trainingData,order)
+
+	n = len(testData)-order # Number of n-tuples in chain of test data
+
+	correct = 0
+
+	if n > 0:
+
+		# We add the last 'order' elements from training data to allow a prediction for
+		# the first element on the test data
+
+		t = ntuples(trainingData[len(trainingData)-order:]+testData,order+1):
+
+			row = row_code[t[:order]] # State n
+			observed_col = col_code[t[order:][0]] # State n+1
+
+			if not row == [] and not observed_col == []: # If both states are on the matrix
+
+				if observed_col == index_of_max(mtx,row): # State n+1 with highest probability
+					correct += 1
+
+			elif row ==[] and not observed_col == []: # Sequence of business not in matrix
+
+				if observed_col == top_freq_col(mtx): # Most frequent state for given 'pan'
+					correct += 1
+
+	return correct / len(testData)
+
 def predict(history):
 
 	print ""
