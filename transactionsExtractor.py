@@ -103,6 +103,7 @@ for pan, grp in itertools.groupby(data, key=operator.itemgetter(0)):
 			node.set(columns[i],str(t[i]))
 
 	append(card)
+	del grp
 
 sys.stdout.write("\tCurrent progress: %d cards grouped\r\n" % (len(cards)) )
 sys.stdout.flush()
