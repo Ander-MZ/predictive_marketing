@@ -123,7 +123,7 @@ def select_and_evaluate_model(history,n_t):
 
 	elif n_t <= m0_max_history: # Model 0
 
-		return model0.evaluate(history[:n_t],history[n_t:])
+		return model0.evaluate2(history[:n_t],history[n_t:])
 
 	elif n_t <= m1_max_history: # Model 1 (Minimum history length = 9 with alpha = 0.75)	
 
@@ -137,25 +137,24 @@ def select_and_evaluate_model(history,n_t):
 		
 		return -1.0
 
-	print ""
-
-
-
-
 def fast_iter(history):
 
 	global precision
+	global results
 	global results
 
 	n_t = int(math.floor(alpha*len(history)))
 	p = select_and_evaluate_model(history,n_t)
 	precision += p
-	results.append(p)
+	results.append((p,n_t))
 
 def create_output():
 
 	global precision
 	global progress
+	global results
+
+	print results
 
 	# Configurations for evaluation matrix
 	m_min_history = 0
