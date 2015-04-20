@@ -18,6 +18,7 @@ import time
 import model0
 import model1
 import model2
+import model3
 
 # Utils
 
@@ -29,34 +30,47 @@ import plotter
 
 # Global Variables
 
-modelName = "2"
 progress = 0
 total = 0
 
 counter = None
 
-# Store input and output file names
-history_file=''
-results_file=''
+# Command line arguments
+history_file=""
+results_file=""
 alpha=0.75
-debug="f"
+modelName = ""
+m0_max_history = 1000
+m1_max_history = 1
+m2_max_history = 1
  
 # Read command line args (training file, results file, proportion of history)
-myopts, args = getopt.getopt(sys.argv[1:],"i:o:a:")
- 
+try:
+	myopts, args = getopt.getopt(sys.argv[1:],"i:o:a:n:0:1:2:",["input=","output=","alpha=","name=","model0=","model1=","model2="])
+except getopt.GetoptError:
+	print "Arguments are incomplete"
+	sys.exit(2)
 ###############################
-# o == option
-# a == argument passed to the o
+# opt == option
+# arg == argument passed to the o
 ###############################
-for o, a in myopts:
-    if o == '-i':
-        history_file=a
-    elif o == '-o':
-        results_file=a
-    elif o == '-a':
-        alpha=float(a)
+for opt, arg in myopts:
+    if opt in ("-i","--input"):
+        history_file=arg
+    elif opt in ("-o","--output"):
+        results_file=arg
+    elif opt in ("-a","--alpha"):
+        alpha=float(arg)
+    elif opt in ("-n","--name"):
+        modelName=arg
+    elif opt in ("-0","--model0"):
+        m0_max_history=int(arg)   
+    elif opt in ("-1","--model1"):
+        m1_max_history=int(arg)   
+    elif opt in ("-2","--model2"):
+        m2_max_history=int(arg)   
     else:
-        print("Usage: %s -i input -o output" % sys.argv[0])
+        print("Usage: %s -i input -o output -a alpha -0 model0 -1 model1 -2 model2" % sys.argv[0])
 
 ### =================================================================================
 
@@ -111,10 +125,6 @@ def update_evaluation_matrix(mtx,counts,results,xpartition,ypartition):
 
 def select_and_evaluate_model(history,n_t):
 
-	m0_max_history = 1000
-	m1_max_history = 1
-	m2_max_history = 1
-
 	if len(history) < 2: # Not enought data for training or testing
 		
 		return 0.0
@@ -148,9 +158,6 @@ def init(args):
 
 def extract_history(cards):
 
-	global counter
-	counter.value += 1
-
 	results = []
 
 	for card in cards:
@@ -170,8 +177,8 @@ def extract_history(cards):
 
 def exec_task(history):
 
-	global progress
-	global total
+	global counter
+	counter.value += 1
 
 	n_t = int(math.floor(alpha*len(history)))
 
@@ -182,26 +189,10 @@ def exec_task(history):
 
 def parse_XML(doc):
 
-	precision = 0.0
-
-	m_min_history = 0
-	m_max_history = 500
-
-	#####
-
-	delta = 25
-	levels = int(math.floor((m_max_history-m_min_history)/delta))
-
-	mtx = np.zeros((levels,levels), dtype=np.float) - 1
-	counts = np.zeros((levels,levels), dtype=np.float)
-
-	min_range = range(m_min_history,delta*levels+m_min_history,delta)
-	max_range = range(m_min_history+delta,delta*levels+m_min_history+delta,delta)
-
-	#####
-
 	cards = doc.getroot()
 
+	# Create general transition matrix (Model 3)
+	# (general_mtx,row_code,col_code) = model3.create_transition_matrix(extract_history(cards), 1)
 
 	# Updating global variable for progress measuring purposes
 	global total
@@ -227,6 +218,18 @@ def parse_XML(doc):
 	
 	results = rs.get()
 
+	# Configurations for evaluation matrix
+	m_min_history = 0
+	m_max_history = 500
+	delta = 25
+	levels = int(math.floor((m_max_history-m_min_history)/delta))
+	mtx = np.zeros((levels,levels), dtype=np.float) - 1
+	counts = np.zeros((levels,levels), dtype=np.float)
+	min_range = range(m_min_history,delta*levels+m_min_history,delta)
+	max_range = range(m_min_history+delta,delta*levels+m_min_history+delta,delta)
+
+	###
+
 	mtx = update_evaluation_matrix(mtx,counts,results,min_range,min_range)
 
 	sys.stdout.write("\tCurrent progress: %.2f %% of cards analyzed\r\n" % (100.00) )
@@ -243,17 +246,17 @@ def parse_XML(doc):
 	print "Evaluation completed!"
 
 
-def save_results(dict_pan_results):
+def save_results(results):
 
-	mean = np.mean(dict_pan_results.values())
-	median = np.median(dict_pan_results.values())
+	mean = np.mean(results)
+	median = np.median(results)
 
 	print "Mean: " , mean , ", Median: " , median
 
 	output_file = open(results_file,'w')
 	write = output_file.write
 
-	for pan, precision in dict_pan_results.items():
+	for precision in results:
 		write("%s%s" % (precision,"\n"))
 
 	output_file.close
