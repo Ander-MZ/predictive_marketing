@@ -192,69 +192,6 @@ def fast_iter(context, *args, **kwargs):
 
 	print "Evaluation completed!"
 
-# Receives the XML file containing all the transaction history data, and parses it to populate
-# the dictionary required by the models
-
-def parse_XML(doc):
-
-	progress = 0
-	precision = 0.0
-	results = []
-
-	m_min_history = 0
-	m_max_history = 500
-
-	#####
-
-	delta = 25
-	levels = int(math.floor((m_max_history-m_min_history)/delta))
-
-	mtx = np.zeros((levels,levels), dtype=np.float) - 1
-	counts = np.zeros((levels,levels), dtype=np.float)
-
-	min_range = range(m_min_history,delta*levels+m_min_history,delta)
-	max_range = range(m_min_history+delta,delta*levels+m_min_history+delta,delta)
-
-	#####
-
-	cards = doc.getroot()
-
-	for card in cards:
-
-		progress += 1
-
-		if progress%1000==0:
-			sys.stdout.write("\tCurrent progress: %.2f %% of cards analyzed\r" % (100*progress/len(cards)) )
-			sys.stdout.flush()
-
-		pan = card.attrib.get('PAN')
-		history = []
-
-		for t in card.find('History'):
-			history.append(t.attrib.get('COM_ID'))
-
-		n_t = int(math.floor(alpha*len(history)))
-
-		p = select_and_evaluate_model(history,n_t)
-		precision += p
-		results.append(p)
-		update_evaluation_matrix(mtx,counts,n_t,p,min_range,min_range)
-
-
-	sys.stdout.write("\tCurrent progress: %.2f %% of cards analyzed\r\n" % (100.00) )
-	sys.stdout.flush()
-
-	print "Average precision: " , precision / progress , " ( min-history = " , min(1,m_min_history) , ", max-history = " , m_max_history, " )"
-
-	with warnings.catch_warnings():
-		warnings.filterwarnings("ignore", message="divide by zero encountered in TRUE_divide")
-		mtx = np.where(counts==0, -1, mtx/counts)
-
-	# plotter.plot_matrix(mtx,max_range,min_range,"Model " + modelName + " precision","../results/model_" + modelName + "_matrix.png")
-	# plotter.plot_histogram(np.asarray(results),"Model " + modelName + " precision","../results/model_" + modelName + "_histogram.png")
-
-	print "Evaluation completed!"
-
 def save_results(dict_pan_results):
 
 	mean = np.mean(dict_pan_results.values())
