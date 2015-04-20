@@ -154,8 +154,6 @@ def create_output():
 	global progress
 	global results
 
-	print results
-
 	# Configurations for evaluation matrix
 	m_min_history = 0
 	m_max_history = 500
