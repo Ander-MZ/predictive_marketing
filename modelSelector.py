@@ -65,12 +65,6 @@ for opt, arg in myopts:
 
 ### =================================================================================
 
-# tmp = rfile.split("/")
-
-# base_dir = "/".join(tmp[:len(tmp)-1]) + "/"
-
-# fig_name = tmp[len(tmp)-1].split(".")[0] + "_matrix_" + str(levels) + ".png"
-
 def assign_partition(value,partition):
 	i = 0
 
