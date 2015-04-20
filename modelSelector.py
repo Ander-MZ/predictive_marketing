@@ -10,6 +10,8 @@ import math
 import matplotlib
 import matplotlib.pyplot as plt
 import warnings
+import lxml.etree as ET
+import time
 
 # Models
 
@@ -92,9 +94,9 @@ def update_evaluation_matrix(mtx,counts,n,p,xpartition,ypartition):
 
 def select_and_evaluate_model(history,n_t):
 
-	m0_max_history = 25 
+	m0_max_history = 1000
 	m1_max_history = 1
-	m2_max_history = 1000
+	m2_max_history = 1
 
 	if len(history) < 2: # Not enought data for training or testing
 		
@@ -117,6 +119,71 @@ def select_and_evaluate_model(history,n_t):
 		return -1.0
 
 	print ""
+
+
+# Iterates over input XML file in a memory-efficient way, deleting the
+# elements that have been previously processed 
+
+def fast_iter(context, *args, **kwargs):
+
+	progress = 0
+	precision = 0.0
+	results = []
+
+	# Configurations for evaluation matrix
+	m_min_history = 0
+	m_max_history = 500
+	delta = 25
+	levels = int(math.floor((m_max_history-m_min_history)/delta))
+	mtx = np.zeros((levels,levels), dtype=np.float) - 1
+	counts = np.zeros((levels,levels), dtype=np.float)
+	min_range = range(m_min_history,delta*levels+m_min_history,delta)
+	max_range = range(m_min_history+delta,delta*levels+m_min_history+delta,delta)
+
+	###
+
+	for event, elem in context:
+
+		progress += 1
+
+		if progress%1000==0:
+			sys.stdout.write("\tCurrent progress: %d cards analyzed\r" % (progress) )
+			sys.stdout.flush()
+
+		pan = elem.attrib.get('PAN')
+		history = []
+		for t in elem.find('History'):
+			history.append(t.attrib.get('COM_ID'))
+
+
+		n_t = int(math.floor(alpha*len(history)))
+		p = select_and_evaluate_model(history,n_t)
+		precision += p
+		results.append(p)
+		update_evaluation_matrix(mtx,counts,n_t,p,min_range,min_range)
+
+		# It's safe to call clear() here because no descendants will be
+		# accessed
+		elem.clear()
+		# Also eliminate now-empty references from the root node to elem
+		for ancestor in elem.xpath('ancestor-or-self::*'):
+			while ancestor.getprevious() is not None:
+				del ancestor.getparent()[0]
+	del context
+
+	sys.stdout.write("\tCurrent progress: %d cards analyzed\r\n" % (progress) )
+	sys.stdout.flush()
+
+	print "Average precision: " , precision / progress , " ( min-history = " , min(1,m_min_history) , ", max-history = " , m_max_history, " )"
+
+	with warnings.catch_warnings():
+		warnings.filterwarnings("ignore", message="divide by zero encountered in TRUE_divide")
+		mtx = np.where(counts==0, -1, mtx/counts)
+
+	# plotter.plot_matrix(mtx,max_range,min_range,"Model " + name + " precision","../results/model_"+name+"_matrix.png")
+	# plotter.plot_histogram(np.asarray(results),"Model " + name + " precision","../results/model_"+name+"_histogram.png")
+
+	print "Evaluation completed!"
 
 # Receives the XML file containing all the transaction history data, and parses it to populate
 # the dictionary required by the models
@@ -182,7 +249,6 @@ def parse_XML(doc):
 
 	print "Evaluation completed!"
 
-
 def save_results(dict_pan_results):
 
 	mean = np.mean(dict_pan_results.values())
@@ -201,12 +267,17 @@ def save_results(dict_pan_results):
 
 ### =================================================================================
 
-# Creates a dictionary containing the transaction history of each card
+print ">Processing XML file"
 
-print ">Reading file"
+t0 = millis = int(round(time.time() * 1000))
 
-tree = cElementTree.parse(history_file)
+context = ET.iterparse(history_file, tag='Card' )
+fast_iter(context)
 
-print ">Parsing file"
+# context = cElementTree.parse(history_file)
+# parse_XML(tree)
 
-parse_XML(tree)
+t1 = millis = int(round(time.time() * 1000))
+
+print "Time elapsed (ms): " , t1-t0
+
