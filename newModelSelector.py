@@ -127,11 +127,11 @@ def select_and_evaluate_model(history,n_t):
 
 	elif n_t <= m1_max_history: # Model 1 (Minimum history length = 9 with alpha = 0.75)	
 
-		return model1.evaluate(history[:n_t],history[n_t:],1)
+		return model1.evaluate2(history[:n_t],history[n_t:],1)
 
 	elif n_t <= m2_max_history: # Model 2 (Minimum history length = 9 with alpha = 0.75)	
 
-		return model2.evaluate(history[:n_t],history[n_t:],2)
+		return model2.evaluate2(history[:n_t],history[n_t:],2)
 
 	else: # More than
 		
