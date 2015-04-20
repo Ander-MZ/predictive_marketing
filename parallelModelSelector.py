@@ -252,6 +252,8 @@ def save_results(results):
 
 ### =================================================================================
 
+t0 = millis = int(round(time.time() * 1000))
+
 print ">Reading file"
 
 tree = cElementTree.parse(history_file)
@@ -259,3 +261,7 @@ tree = cElementTree.parse(history_file)
 print ">Parsing file"
 
 parse_XML(tree)
+
+t1 = millis = int(round(time.time() * 1000))
+
+print "Time elapsed (ms): " , t1-t0
