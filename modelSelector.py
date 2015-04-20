@@ -18,6 +18,7 @@ import time
 import model0
 import model1
 import model2
+import model3
 
 # Utils
 
@@ -25,30 +26,42 @@ import plotter
 
 ### =================================================================================
 
-name = "2"
-
 # Store input and output file names
 history_file=''
 results_file=''
 alpha=0.75
-debug="f"
+modelName = ""
+m0_max_history = 1000
+m1_max_history = 1
+m2_max_history = 1
  
 # Read command line args (training file, results file, proportion of history)
-myopts, args = getopt.getopt(sys.argv[1:],"i:o:a:")
- 
+try:
+	myopts, args = getopt.getopt(sys.argv[1:],"i:o:a:n:0:1:2:",["input=","output=","alpha=","name=","model0=","model1=","model2="])
+except getopt.GetoptError:
+	print "Arguments are incomplete"
+	sys.exit(2)
 ###############################
-# o == option
-# a == argument passed to the o
+# opt == option
+# arg == argument passed to the o
 ###############################
-for o, a in myopts:
-    if o == '-i':
-        history_file=a
-    elif o == '-o':
-        results_file=a
-    elif o == '-a':
-        alpha=float(a)
+for opt, arg in myopts:
+    if opt in ("-i","--input"):
+        history_file=arg
+    elif opt in ("-o","--output"):
+        results_file=arg
+    elif opt in ("-a","--alpha"):
+        alpha=float(arg)
+    elif opt in ("-n","--name"):
+        modelName=arg
+    elif opt in ("-0","--model0"):
+        m0_max_history=int(arg)   
+    elif opt in ("-1","--model1"):
+        m1_max_history=int(arg)   
+    elif opt in ("-2","--model2"):
+        m2_max_history=int(arg)   
     else:
-        print("Usage: %s -i input -o output" % sys.argv[0])
+        print("Usage: %s -i input -o output -a alpha -0 model0 -1 model1 -2 model2" % sys.argv[0])
 
 ### =================================================================================
 
@@ -180,8 +193,8 @@ def fast_iter(context, *args, **kwargs):
 		warnings.filterwarnings("ignore", message="divide by zero encountered in TRUE_divide")
 		mtx = np.where(counts==0, -1, mtx/counts)
 
-	# plotter.plot_matrix(mtx,max_range,min_range,"Model " + name + " precision","../results/model_"+name+"_matrix.png")
-	# plotter.plot_histogram(np.asarray(results),"Model " + name + " precision","../results/model_"+name+"_histogram.png")
+	# plotter.plot_matrix(mtx,max_range,min_range,"Model " + modelName + " precision","../results/model_" + modelName + "_matrix.png")
+	# plotter.plot_histogram(np.asarray(results),"Model " + modelName + " precision","../results/model_" + modelName + "_histogram.png")
 
 	print "Evaluation completed!"
 
@@ -243,9 +256,8 @@ def parse_XML(doc):
 		warnings.filterwarnings("ignore", message="divide by zero encountered in TRUE_divide")
 		mtx = np.where(counts==0, -1, mtx/counts)
 
-	plotter.plot_matrix(mtx,max_range,min_range,"Model " + name + " precision","../results/model_"+name+"_matrix.png")
-
-	plotter.plot_histogram(np.asarray(results),"Model " + name + " precision","../results/model_"+name+"_histogram.png")
+	# plotter.plot_matrix(mtx,max_range,min_range,"Model " + modelName + " precision","../results/model_" + modelName + "_matrix.png")
+	# plotter.plot_histogram(np.asarray(results),"Model " + modelName + " precision","../results/model_" + modelName + "_histogram.png")
 
 	print "Evaluation completed!"
 
