@@ -26,13 +26,8 @@ import plotter
 
 ### =================================================================================
 
-
-
 # Global Variables
-
-progress = 0
 total = 0
-
 counter = None
 
 # Command line arguments
@@ -73,12 +68,6 @@ for opt, arg in myopts:
         print("Usage: %s -i input -o output -a alpha -0 model0 -1 model1 -2 model2" % sys.argv[0])
 
 ### =================================================================================
-
-# tmp = rfile.split("/")
-
-# base_dir = "/".join(tmp[:len(tmp)-1]) + "/"
-
-# fig_name = tmp[len(tmp)-1].split(".")[0] + "_matrix_" + str(levels) + ".png"
 
 def assign_partition(value,partition):
 	i = 0
@@ -240,7 +229,6 @@ def parse_XML(doc):
 	print "Average precision: " , sum(precision)/len(precision) , " ( min-history = " , min(1,m_min_history) , ", max-history = " , m_max_history, " )"
 
 	plotter.plot_matrix(mtx,max_range,min_range,"Model " + modelName + " precision","../results/model_"+modelName+"_matrix.png")
-
 	plotter.plot_histogram(np.asarray(precision),"Model " + modelName + " precision","../results/model_"+modelName+"_histogram.png")
 
 	print "Evaluation completed!"
@@ -263,8 +251,6 @@ def save_results(results):
 
 
 ### =================================================================================
-
-# Creates a dictionary containing the transaction history of each card
 
 print ">Reading file"
 
