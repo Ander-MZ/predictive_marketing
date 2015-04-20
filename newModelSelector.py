@@ -245,6 +245,10 @@ for pan, grp in itertools.groupby(data, key=operator.itemgetter(0)):
 sys.stdout.write("\tCurrent progress: %d cards processed\r\n" % (progress) )
 sys.stdout.flush()
 
+print ">Creating output"
+
+create_output()
+
 t1 = millis = int(round(time.time() * 1000))
 
 print "Time elapsed (ms): " , t1-t0
