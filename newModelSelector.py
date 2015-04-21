@@ -59,7 +59,7 @@ for opt, arg in myopts:
     elif opt in ("-a","--alpha"):
         alpha=float(arg)
     elif opt in ("-n","--firstN"):
-        firstN=arg        
+        firstN=int(arg)        
     elif opt in ("-m","--modelName"):
         modelName=arg
     elif opt in ("-0","--model0"):
