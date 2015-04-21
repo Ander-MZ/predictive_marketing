@@ -144,7 +144,7 @@ def evaluateAllFirstN(trainingData, testData, n, order=2):
 		# We add the last 'order' elements from training data to allow a prediction for
 		# the first element on the test data
 
-		t = ntuples(trainingData[len(trainingData)-order:]+testData,order+1)
+		tuples = ntuples(trainingData[len(trainingData)-order:]+testData,order+1)
 
 		for i in range(n):
 
