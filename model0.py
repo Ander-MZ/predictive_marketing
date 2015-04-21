@@ -46,7 +46,7 @@ def evaluateAllFirstN(trainingData, testData, n):
 		for i in range(n):
 			v = testData[i]
 			if v != top:
-				correct *= 0
+				correct = 0
 
 	return correct
 
