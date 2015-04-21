@@ -139,7 +139,7 @@ def evaluateAllFirstN(trainingData, testData, n, order=2):
 
 	correct = 0
 
-	if s > 0:
+	if s > 0 and n <= s:
 
 		# We add the last 'order' elements from training data to allow a prediction for
 		# the first element on the test data

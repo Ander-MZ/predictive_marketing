@@ -41,10 +41,12 @@ def evaluateAllFirstN(trainingData, testData, n):
 	top = most_common(trainingData)
 	correct = 0
 
-	for i in range(n):
-		v = testData[i]
-		if v == top:
-			correct +=1
+	if n <= len(testData):
+
+		for i in range(n):
+			v = testData[i]
+			if v == top:
+				correct +=1
 
 	return correct / n
 
