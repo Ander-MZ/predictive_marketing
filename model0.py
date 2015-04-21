@@ -50,6 +50,20 @@ def evaluateAllFirstN(trainingData, testData, n):
 
 	return correct / n
 
+def evaluateAnyFirstN(trainingData, testData, n):
+
+	top = most_common(trainingData)
+	correct = 0
+
+	if n <= len(testData):
+
+		for i in range(n):
+			v = testData[i]
+			if v == top:
+				correct = 1
+
+	return correct
+
 # Receives a transaction history and returns the most probable MCC / COM_ID of the next transaction
 
 def predict(history):
