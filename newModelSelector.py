@@ -120,6 +120,8 @@ def update_evaluation_matrix(mtx,counts,results,xpartition,ypartition):
 
 def select_and_evaluate_model(history,n_t):
 
+	global firstN
+
 	if len(history) < 2: # Not enought data for training or testing
 		
 		return 0.0
@@ -130,11 +132,11 @@ def select_and_evaluate_model(history,n_t):
 
 	elif n_t <= m1_max_history: # Model 1 (Minimum history length = 9 with alpha = 0.75)	
 
-		return model1.evaluateAllFirstN(history[:n_t],history[n_t:],1)
+		return model1.evaluateAllFirstN(history[:n_t],history[n_t:],firstN,1)
 
 	elif n_t <= m2_max_history: # Model 2 (Minimum history length = 9 with alpha = 0.75)	
 
-		return model2.evaluateAllFirstN(history[:n_t],history[n_t:],2)
+		return model2.evaluateAllFirstN(history[:n_t],history[n_t:],firstN,2)
 
 	else: # More than
 		
@@ -143,7 +145,6 @@ def select_and_evaluate_model(history,n_t):
 def fast_iter(history):
 
 	global precision
-	global results
 	global results
 
 	n_t = int(math.floor(alpha*len(history)))
