@@ -39,10 +39,11 @@ modelName = ""
 m0_max_history = 1000
 m1_max_history = 1
 m2_max_history = 1
+firstN = 1
  
 # Read command line args (training file, results file, proportion of history)
 try:
-	myopts, args = getopt.getopt(sys.argv[1:],"i:o:a:n:0:1:2:",["input=","output=","alpha=","name=","model0=","model1=","model2="])
+	myopts, args = getopt.getopt(sys.argv[1:],"i:o:a:n:m:0:1:2:",["input=","output=","alpha=","firstN=","name=","model0=","model1=","model2="])
 except getopt.GetoptError:
 	print "Arguments are incomplete"
 	sys.exit(2)
@@ -57,7 +58,9 @@ for opt, arg in myopts:
         results_file=arg
     elif opt in ("-a","--alpha"):
         alpha=float(arg)
-    elif opt in ("-n","--name"):
+    elif opt in ("-n","--firstN"):
+        firstN=arg        
+    elif opt in ("-m","--modelName"):
         modelName=arg
     elif opt in ("-0","--model0"):
         m0_max_history=int(arg)   
@@ -123,7 +126,7 @@ def select_and_evaluate_model(history,n_t):
 
 	elif n_t <= m0_max_history: # Model 0
 
-		return model0.evaluate2(history[:n_t],history[n_t:])
+		return model0.evaluateAllFirstN(history[:n_t],history[n_t:],firstN)
 
 	elif n_t <= m1_max_history: # Model 1 (Minimum history length = 9 with alpha = 0.75)	
 
@@ -150,8 +153,6 @@ def fast_iter(history):
 
 def create_output():
 
-	global precision
-	global progress
 	global results
 
 	# Configurations for evaluation matrix
@@ -167,15 +168,16 @@ def create_output():
 	###
 
 	mtx = update_evaluation_matrix(mtx,counts,results,min_range,min_range)
+	precision = [float(i[0]) for i in results]
 
-	print "Average precision: " , precision / progress , " ( min-history = " , min(1,m_min_history) , ", max-history = " , m_max_history, " )"
+	print "Average precision: " , sum(precision)/len(precision) , " ( min-history = " , min(1,m_min_history) , ", max-history = " , m_max_history, " )"
 
 	with warnings.catch_warnings():
 		warnings.filterwarnings("ignore", message="divide by zero encountered in TRUE_divide")
 		mtx = np.where(counts==0, -1, mtx/counts)
 
 	plotter.plot_matrix(mtx,max_range,min_range,"Model " + modelName + " precision","../results/model_" + modelName + "_matrix.png")
-	plotter.plot_histogram(np.asarray(results),"Model " + modelName + " precision","../results/model_" + modelName + "_histogram.png")
+	plotter.plot_histogram(np.asarray(precision),"Model " + modelName + " precision","../results/model_" + modelName + "_histogram.png")
 
 	print "Evaluation completed!"
 
