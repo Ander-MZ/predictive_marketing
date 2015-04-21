@@ -131,15 +131,15 @@ def evaluate(trainingData, testData, order=2):
 
 	return correct / len(testData)
 
-def evaluate2(trainingData, testData, order=2):
+def evaluateAllFirstN(trainingData, testData, n, order=2):
 
 	(mtx,row_code,col_code) = create_sparse_matrix(trainingData,order)
 
-	n = len(testData)-order # Number of n-tuples in chain of test data
+	s = len(testData)-order # Number of n-tuples in chain of test data
 
 	correct = 0
 
-	if n > 0:
+	if s > 0:
 
 		# We add the last 'order' elements from training data to allow a prediction for
 		# the first element on the test data

@@ -145,15 +145,15 @@ def evaluate(trainingData, testData, order=1):
 
 # Receives a transaction history and returns the most probable MCC / COM_ID of the next transaction
 
-def evaluateAllFirstN(trainingData, testData, n ,order=1):
+def evaluateAllFirstN(trainingData, testData, n, order=1):
 
 	(mtx,row_code,col_code) = create_sparse_matrix(trainingData,order)
 
-	n = len(testData)-order # Number of n-tuples in chain of test data
+	s = len(testData)-order # Number of n-tuples in chain of test data
 
 	correct = 0
 
-	if n > 0:
+	if s > 0:
 
 		# We add the last 'order' elements from training data to allow a prediction for
 		# the first element on the test data
