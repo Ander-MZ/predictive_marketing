@@ -137,6 +137,40 @@ def evaluateAllFirstN(trainingData, testData, n, order=2):
 
 	s = len(testData)-order # Number of n-tuples in chain of test data
 
+	correct = 1
+
+	if s > 0 and n <= s:
+
+		# We add the last 'order' elements from training data to allow a prediction for
+		# the first element on the test data
+
+		tuples = ntuples(trainingData[len(trainingData)-order:]+testData,order+1)
+
+		for i in range(n):
+
+			t = tuples[i]
+
+			row = row_code[frozenset(t[:order])] # State n
+			observed_col = col_code[t[order:][0]] # State n+1
+
+			if not row == [] and not observed_col == []: # If both states are on the matrix
+
+				if observed_col != index_of_max(mtx,row): # State n+1 with highest probability
+					correct = 0
+
+			elif row ==[] and not observed_col == []: # Sequence of business not in matrix
+
+				if observed_col != top_freq_col(mtx): # Most frequent state for given 'ngram'
+					correct = 0
+
+	return correct
+
+def evaluateAnyFirstN(trainingData, testData, n, order=2):
+
+	(mtx,row_code,col_code) = create_sparse_matrix(trainingData,order)
+
+	s = len(testData)-order # Number of n-tuples in chain of test data
+
 	correct = 0
 
 	if s > 0 and n <= s:
@@ -156,15 +190,14 @@ def evaluateAllFirstN(trainingData, testData, n, order=2):
 			if not row == [] and not observed_col == []: # If both states are on the matrix
 
 				if observed_col == index_of_max(mtx,row): # State n+1 with highest probability
-					correct += 1
+					correct = 1
 
 			elif row ==[] and not observed_col == []: # Sequence of business not in matrix
 
 				if observed_col == top_freq_col(mtx): # Most frequent state for given 'ngram'
-					correct += 1
+					correct = 1
 
-	return correct / n
-
+	return correct
 
 # Receives a transaction history and returns the most probable MCC / COM_ID of the next transaction
 

@@ -39,16 +39,16 @@ def evaluate(trainingData, testData):
 def evaluateAllFirstN(trainingData, testData, n):
 
 	top = most_common(trainingData)
-	correct = 0
+	correct = 1
 
 	if n <= len(testData):
 
 		for i in range(n):
 			v = testData[i]
-			if v == top:
-				correct +=1
+			if v != top:
+				correct *= 0
 
-	return correct / n
+	return correct
 
 def evaluateAnyFirstN(trainingData, testData, n):
 
