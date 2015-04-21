@@ -40,10 +40,11 @@ m0_max_history = 1000
 m1_max_history = 1
 m2_max_history = 1
 firstN = 1
+evaltype = "ALL"
  
 # Read command line args (training file, results file, proportion of history)
 try:
-	myopts, args = getopt.getopt(sys.argv[1:],"i:o:a:n:m:0:1:2:",["input=","output=","alpha=","firstN=","name=","model0=","model1=","model2="])
+	myopts, args = getopt.getopt(sys.argv[1:],"i:o:a:t:n:m:0:1:2:",["input=","output=","alpha=","evaltype=","firstN=","name=","model0=","model1=","model2="])
 except getopt.GetoptError:
 	print "Arguments are incomplete"
 	sys.exit(2)
@@ -58,6 +59,8 @@ for opt, arg in myopts:
         results_file=arg
     elif opt in ("-a","--alpha"):
         alpha=float(arg)
+    elif opt in ("-t","--evaltype"):
+        evaltype=arg       
     elif opt in ("-n","--firstN"):
         firstN=int(arg)        
     elif opt in ("-m","--modelName"):
@@ -128,15 +131,24 @@ def select_and_evaluate_model(history,n_t):
 
 	elif n_t <= m0_max_history: # Model 0
 
-		return model0.evaluateAllFirstN(history[:n_t],history[n_t:],firstN)
+		if evaltype == "ALL":
+			return model0.evaluateAllFirstN(history[:n_t],history[n_t:],firstN)
+		else:
+			return model0.evaluateAnyFirstN(history[:n_t],history[n_t:],firstN)
 
 	elif n_t <= m1_max_history: # Model 1 (Minimum history length = 9 with alpha = 0.75)	
 
-		return model1.evaluateAllFirstN(history[:n_t],history[n_t:],firstN,1)
+		if evaltype == "ALL":
+			return model1.evaluateAllFirstN(history[:n_t],history[n_t:],firstN,1)
+		else:
+			return model1.evaluateAnyFirstN(history[:n_t],history[n_t:],firstN,1)
 
 	elif n_t <= m2_max_history: # Model 2 (Minimum history length = 9 with alpha = 0.75)	
 
-		return model2.evaluateAllFirstN(history[:n_t],history[n_t:],firstN,2)
+		if evaltype == "ALL":
+			return model2.evaluateAllFirstN(history[:n_t],history[n_t:],firstN,2)
+		else:
+			return model2.evaluateAnyFirstN(history[:n_t],history[n_t:],firstN,2)
 
 	else: # More than
 		
