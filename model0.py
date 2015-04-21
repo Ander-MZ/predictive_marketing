@@ -36,16 +36,17 @@ def evaluate(trainingData, testData):
 # (visited MCC / COM_ID) on the next period, and returns a score between 0 and 1 for the 
 # prediction of the FIRST transaction
 
-def evaluate2(trainingData, testData):
+def evaluateAllFirstN(trainingData, testData, n):
 
 	top = most_common(trainingData)
 	correct = 0
 
-	v = testData[0]
-	if v == top:
-		correct = 1
+	for i in range(n)
+		v = testData[i]
+		if v == top:
+			correct +=1
 
-	return correct
+	return correct / n
 
 # Receives a transaction history and returns the most probable MCC / COM_ID of the next transaction
 

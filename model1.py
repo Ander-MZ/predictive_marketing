@@ -145,7 +145,7 @@ def evaluate(trainingData, testData, order=1):
 
 # Receives a transaction history and returns the most probable MCC / COM_ID of the next transaction
 
-def evaluate2(trainingData, testData, order=1):
+def evaluateAllFirstN(trainingData, testData, n ,order=1):
 
 	(mtx,row_code,col_code) = create_sparse_matrix(trainingData,order)
 
@@ -158,7 +158,11 @@ def evaluate2(trainingData, testData, order=1):
 		# We add the last 'order' elements from training data to allow a prediction for
 		# the first element on the test data
 
-		t = ntuples(trainingData[len(trainingData)-order:]+testData,order+1):
+		tuples = ntuples(trainingData[len(trainingData)-order:]+testData,order+1)
+
+		for i in range(n):
+
+			t = tuples[i]
 
 			row = row_code[t[:order]] # State n
 			observed_col = col_code[t[order:][0]] # State n+1
@@ -173,7 +177,7 @@ def evaluate2(trainingData, testData, order=1):
 				if observed_col == top_freq_col(mtx): # Most frequent state for given 'pan'
 					correct += 1
 
-	return correct / len(testData)
+	return correct / n
 
 def predict(history):
 

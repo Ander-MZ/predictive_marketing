@@ -144,7 +144,11 @@ def evaluate2(trainingData, testData, order=2):
 		# We add the last 'order' elements from training data to allow a prediction for
 		# the first element on the test data
 
-		t = ntuples(trainingData[len(trainingData)-order:]+testData,order+1):
+		t = ntuples(trainingData[len(trainingData)-order:]+testData,order+1)
+
+		for i in range(n):
+
+			t = tuples[i]
 
 			row = row_code[frozenset(t[:order])] # State n
 			observed_col = col_code[t[order:][0]] # State n+1
@@ -159,7 +163,7 @@ def evaluate2(trainingData, testData, order=2):
 				if observed_col == top_freq_col(mtx): # Most frequent state for given 'ngram'
 					correct += 1
 
-	return correct / len(testData)
+	return correct / n
 
 
 # Receives a transaction history and returns the most probable MCC / COM_ID of the next transaction
