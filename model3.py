@@ -6,6 +6,7 @@ import sys, getopt
 from itertools import izip, islice, product
 import scipy.sparse as sps
 import math
+from random import randint
 
 ### =================================================================================
 
@@ -33,9 +34,20 @@ def ntuples(lst, n):
 		return zip(*[lst[i:]+lst[:i] for i in range(n)])[:(-n+1)]
 
 # Receives a sparse matrix and a row index, and returns the col index of the max value in that row
+# If all values of row are 0, then returns -1. If there is a tie, returns a random col index
 
-def index_of_max(mtx,row):
-	return np.argmax(mtx[row,:].todense())
+def index_of_max(mtx,row_index):
+
+	row = mtx[row_index,:].todense()
+
+	if np.sum(row) == 0:
+		# return -1
+		return randint(0,np.shape(row)[1]-1) # Random col index
+	elif np.sum(row) / np.shape(row)[1] == row[0,0]:
+		# return -2
+		return randint(0,np.shape(row)[1]-1) # Random col index
+	else:
+		return np.argmax(row)
 
 # Receives a sparse matrix and returns the index of the column with highest frequency
 
