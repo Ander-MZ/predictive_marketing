@@ -74,6 +74,8 @@ for opt, arg in myopts:
     else:
         print("Usage: %s -i input -o output -a alpha -0 model0 -1 model1 -2 model2" % sys.argv[0])
 
+print "Model: " , modelName
+
 ### =================================================================================
 
 def assign_partition(value,partition):
