@@ -5,6 +5,7 @@ import collections
 import sys, getopt
 from itertools import izip, islice, product
 import scipy.sparse as sps
+from random import randint
 
 ### =================================================================================
 
@@ -22,9 +23,20 @@ def ntuples(lst, n):
 		return zip(*[lst[i:]+lst[:i] for i in range(n)])[:(-n+1)]
 
 # Receives a sparse matrix and a row index, and returns the col index of the max value in that row
+# If all values of row are 0, then returns -1. If there is a tie, returns a random col index
 
-def index_of_max(mtx,row):
-	return np.argmax(mtx[row,:].todense())
+def index_of_max(mtx,row_index):
+
+	row = mtx[row_index,:].todense()
+
+	if np.sum(row) == 0:
+		# return -1
+		return randint(0,np.shape(row)[1]-1) # Random col index
+	elif np.sum(row) / np.shape(row)[1] == row[0,0]:
+		# return -2
+		return randint(0,np.shape(row)[1]-1) # Random col index
+	else:
+		return np.argmax(row)
 
 # Receives a sparse matrix and returns the index of the column with highest frequency
 
@@ -135,33 +147,36 @@ def evaluateAllFirstN(trainingData, testData, n, order=2):
 
 	(mtx,row_code,col_code) = create_sparse_matrix(trainingData,order)
 
-	s = len(testData)-order # Number of n-tuples in chain of test data
-
 	correct = 1
+	i = 0
 
-	if s > 0 and n <= s:
+	# We add the last 'order' elements from training data to allow a prediction for
+	# the first element on the test data
 
-		# We add the last 'order' elements from training data to allow a prediction for
-		# the first element on the test data
+	tuples = ntuples(trainingData[len(trainingData)-order:]+testData,order+1)
 
-		tuples = ntuples(trainingData[len(trainingData)-order:]+testData,order+1)
+	while i < n and i < len(tuples):
 
-		for i in range(n):
+		t = tuples[i]
 
-			t = tuples[i]
+		row = row_code[frozenset(t[:order])] # State n
+		observed_col = col_code[t[order:][0]] # State n+1
 
-			row = row_code[frozenset(t[:order])] # State n
-			observed_col = col_code[t[order:][0]] # State n+1
+		if not row == [] and not observed_col == []: # If both states are on the matrix
 
-			if not row == [] and not observed_col == []: # If both states are on the matrix
+			if observed_col != index_of_max(mtx,row): # State n+1 with highest probability
+				correct = 0
 
-				if observed_col != index_of_max(mtx,row): # State n+1 with highest probability
-					correct = 0
+		elif row ==[] and not observed_col == []: # Sequence of business not in matrix
 
-			elif row ==[] and not observed_col == []: # Sequence of business not in matrix
+			if observed_col != top_freq_col(mtx): # Most frequent state for given 'ngram'
+				correct = 0
 
-				if observed_col != top_freq_col(mtx): # Most frequent state for given 'ngram'
-					correct = 0
+		else:
+
+			correct = 0
+
+		i += 1
 
 	return correct
 
@@ -169,33 +184,32 @@ def evaluateAnyFirstN(trainingData, testData, n, order=2):
 
 	(mtx,row_code,col_code) = create_sparse_matrix(trainingData,order)
 
-	s = len(testData)-order # Number of n-tuples in chain of test data
-
 	correct = 0
+	i = 0
 
-	if s > 0 and n <= s:
+	# We add the last 'order' elements from training data to allow a prediction for
+	# the first element on the test data
 
-		# We add the last 'order' elements from training data to allow a prediction for
-		# the first element on the test data
+	tuples = ntuples(trainingData[len(trainingData)-order:]+testData,order+1)
 
-		tuples = ntuples(trainingData[len(trainingData)-order:]+testData,order+1)
+	while i < n and i < len(tuples):
 
-		for i in range(n):
+		t = tuples[i]
 
-			t = tuples[i]
+		row = row_code[frozenset(t[:order])] # State n
+		observed_col = col_code[t[order:][0]] # State n+1
 
-			row = row_code[frozenset(t[:order])] # State n
-			observed_col = col_code[t[order:][0]] # State n+1
+		if not row == [] and not observed_col == []: # If both states are on the matrix
 
-			if not row == [] and not observed_col == []: # If both states are on the matrix
+			if observed_col == index_of_max(mtx,row): # State n+1 with highest probability
+				correct = 1
 
-				if observed_col == index_of_max(mtx,row): # State n+1 with highest probability
-					correct = 1
+		elif row ==[] and not observed_col == []: # Sequence of business not in matrix
 
-			elif row ==[] and not observed_col == []: # Sequence of business not in matrix
+			if observed_col == top_freq_col(mtx): # Most frequent state for given 'ngram'
+				correct = 1
 
-				if observed_col == top_freq_col(mtx): # Most frequent state for given 'ngram'
-					correct = 1
+		i += 1
 
 	return correct
 

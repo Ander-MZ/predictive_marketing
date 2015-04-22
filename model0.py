@@ -40,13 +40,13 @@ def evaluateAllFirstN(trainingData, testData, n):
 
 	top = most_common(trainingData)
 	correct = 1
+	i = 0
 
-	if n <= len(testData):
-
-		for i in range(n):
-			v = testData[i]
-			if v != top:
-				correct = 0
+	while i < n and i < len(testData):
+		v = testData[i]
+		if v != top:
+			correct = 0
+		i += 1
 
 	return correct
 
@@ -54,13 +54,13 @@ def evaluateAnyFirstN(trainingData, testData, n):
 
 	top = most_common(trainingData)
 	correct = 0
+	i = 0
 
-	if n <= len(testData):
-
-		for i in range(n):
-			v = testData[i]
-			if v == top:
-				correct = 1
+	while i < n and i < len(testData):
+		v = testData[i]
+		if v == top:
+			correct = 1
+		i += 1
 
 	return correct
 
