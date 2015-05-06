@@ -2,27 +2,25 @@
 
 res1=`date +%s`
 
-echo "Cleaning rows with noise"
+echo "Working on file: " "$1"
 
-awk -F "," '$8 ~ /^[0-9]*$/{print $0}' "$1" > ../results/query_clean.csv
+echo "Removing extra lines (DB prints)"
 
-echo "Sorting by pan and date (ascending)"
+sed -i '$ d' ~/Storage/data/${1}.csv
 
-sort -t "," -k1 -nk4 -nk5 -nk6 ../results/query_clean.csv > ../results/query_sorted.csv && rm ../results/query_clean.csv
+sed -i '1 d' ~/Storage/data/${1}.csv
 
-(echo "pan,amount,mcc,month,day,hour,dow,com_id" ; cat ../results/query_sorted.csv) > ../results/temp.csv && mv ../results/temp.csv ../results/query_sorted.csv 
+echo "Cleaning rows from incorrect values"
 
-echo "Grouping data by supplied key:" "$2"
+awk -F "," '$10 ~ /^[0-9]*$/{print $0}' ~/Storage/data/${1}.csv > ~/Storage/data/${1}_cleaned.csv
 
-python groupBy.py -i ../results/query_sorted.csv -o ../results/groupedData.csv -c "$2"
+echo "Grouping rows by pan and then sorting by date"
 
-echo "Sorting output"
+sort -T ~/Storage -t "," -k1,1 -k4,4n -k5,5n -k6,6n -k7,7n -k8,8n ~/Storage/data/${1}_cleaned.csv > ~/Storage/data/${1}_sorted.csv
 
-awk -F "," '{print NF,$0}' ../results/groupedData.csv | sort -rnk1,1 | cut -d ' ' -f 2- > ../results/temp.csv && mv ../results/temp.csv ../results/groupedData.csv 
+echo "Adding header to files"
 
-echo "Creating transition matrix"
-
-python createTransitionMatrix.py -i ../results/groupedData.csv
+(echo "pan,amount,mcc,month,day,hour,dow,com_id" ; cat ~/Storage/data/${1}_sorted.csv) > ~/Storage/data/temp.csv && mv ~/Storage/data/temp.csv ~/Storage/data/${1}_sorted.csv
 
 res2=`date +%s`
 
