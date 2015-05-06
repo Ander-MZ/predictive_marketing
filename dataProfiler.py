@@ -13,10 +13,9 @@ import plotter
 
 # Store input and output file names
 ifile=''
-ofile=''
  
 # Read command line args
-myopts, args = getopt.getopt(sys.argv[1:],"i:o:")
+myopts, args = getopt.getopt(sys.argv[1:],"i:")
  
 ###############################
 # o == option
@@ -25,8 +24,6 @@ myopts, args = getopt.getopt(sys.argv[1:],"i:o:")
 for o, a in myopts:
     if o == '-i':
         ifile=a
-    elif o == '-o':
-        ofile=a
     else:
         print("Usage: %s -i input -o output" % sys.argv[0])
 
@@ -39,7 +36,11 @@ for o, a in myopts:
 types = {'pan':'str',
 	  'amount':'float',
 	  'mcc':'str',
+	  'year':'int',
+	  'month':'int',
+	  'day':'int',
 	  'hour':'int',
+	  'min':'int',
 	  'dow':'int',
 	  'com_id':'str'}
 
@@ -52,12 +53,20 @@ print ">Extracting transactions"
 # Group rows by 'pan' and then adds entry to XML tree
 
 progress = 0
-results = []
+frequencies = []
+amounts = []
 
 for pan, grp in itertools.groupby(data, key=operator.itemgetter(0)):
 
 	history = map(operator.itemgetter(range(1,len(types))),grp)
-	results.append(len(history))
+	amount_acc = 0.0
+
+	for t in history:
+		amount_acc += float(t[0])
+	
+	frequencies.append(len(history))
+	amounts.append(amount_acc / len(history))
+
 	progress += 1
 
 	if progress%1000==0:
@@ -65,12 +74,14 @@ for pan, grp in itertools.groupby(data, key=operator.itemgetter(0)):
 		sys.stdout.flush()
 
 
-sys.stdout.write("\tCurrent progress: %d cards grouped\r\n" % (len(results)) )
+sys.stdout.write("\tCurrent progress: %d cards grouped\r\n" % (len(frequencies)) )
 sys.stdout.flush()
 
-plotter.plot_histogram(np.asarray(results),"History length","../results/history_length_histogram.png")
+plotter.plot_histogram(np.asarray(frequencies),"History length","../results/history_length_histogram.png")
 
-print "Number of cards: " , len(results)
+plotter.plot_histogram(np.asarray(amounts),"Mean purchase amount","../results/mean_amounts_histogram.png")
+
+print "Number of cards: " , len(frequencies)
 
 ############################################################
 
