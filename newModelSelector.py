@@ -193,7 +193,7 @@ def create_output():
 
 	#plotter.plot_matrix(mtx,max_range,min_range,"Model " + modelName + " precision","../results/model_" + modelName + "_matrix.png")
 	plotter.plot_histogram(np.asarray(precision),"Model " + modelName + " precision","../results/model_" + modelName + "_histogram.png")
-	plotter.plot_row_matrix(mtx,max_range,"Model " + modelName + " precision","../results/model_" + modelName + "_matrix.png")
+	plotter.plot_row_matrix(mtx,max_range,"Model " + modelName + " precision","../results/model_" + modelName + "_row_matrix.png")
 
 	print "Evaluation completed!"
 
