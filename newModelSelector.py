@@ -218,15 +218,13 @@ def save_results(dict_pan_results):
 types = {'pan':'str',
 	  'amount':'float',
 	  'mcc':'str',
+	  'year':'int',
+	  'month':'int',
+	  'day':'int',
 	  'hour':'int',
+	  'min':'int',
 	  'dow':'int',
 	  'com_id':'str'}
-
-columns = ['AMOUNT',
-		  'MCC',
-		  'HOUR',
-		  'DOW',
-		  'COM_ID']
 
 t0 = millis = int(round(time.time() * 1000))
 
