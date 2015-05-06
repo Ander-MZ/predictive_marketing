@@ -69,7 +69,7 @@ def plot_row_matrix(m,xpartition,title,filename,norm=False):
     palette.set_under('gray', 1.0)
 
     plt.matshow(r,vmin=0,vmax=1,cmap=palette)
-    plt.title(title+'\n')
+    plt.title(title+'\n\n')
     plt.colorbar()
     
     plt.xlabel('Max history')
