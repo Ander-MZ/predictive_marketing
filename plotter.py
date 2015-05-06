@@ -82,20 +82,13 @@ def plot_row_matrix(m,xpartition,title,filename,norm=False):
 
 # Receives a data collection in the form of a Numpy Array
 
-def plot_histogram(data,title,filename,verbose=False):
+def plot_histogram(data,title,filename,b=20):
 
 	data = data[data>=0] # Remove -1 from the 'not found in training' cases
 
 	n = len(data)
 
-	if verbose:
-		print "Predictions with precision = 0%% : %.2f %%" %  (100 * len(data[data==0.0]) / n) 
-		print "Predictions with precision > 0%% : %.2f %%" %  (100 * len(data[data>0.00]) / n) 
-		print "Predictions with precision > 25%% : %.2f %%" % (100 * len(data[data>0.25]) / n) 
-		print "Predictions with precision > 50%% : %.2f %%" % (100 * len(data[data>0.50]) / n) 
-		print "Predictions with precision > 75%% : %.2f %%" % (100 * len(data[data>0.75]) / n) 
-
-	nx, xbins, ptchs = plt.hist(data, bins=20)
+	nx, xbins, ptchs = plt.hist(data, bins=b)
 	plt.clf() # Get rid of this histogram since not the one we want.
 
 	nx_frac = nx/len(data) # Each bin divided by total number of objects.
