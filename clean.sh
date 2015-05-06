@@ -6,9 +6,9 @@ echo "Working on file: " "$1"
 
 echo "Removing extra lines (DB prints)"
 
-sed -i '$ d' ~/Storage/data/${1}.csv
+sed -i '1 d' ~/Storage/data/${1}.csv # Remove first line
 
-sed -i '1 d' ~/Storage/data/${1}.csv
+sed -i '$ d' ~/Storage/data/${1}.csv # Remove last line
 
 echo "Cleaning rows from incorrect values"
 
@@ -18,9 +18,9 @@ echo "Grouping rows by pan and then sorting by date"
 
 sort -T ~/Storage -t "," -k1,1 -k4,4n -k5,5n -k6,6n -k7,7n -k8,8n ~/Storage/data/${1}_cleaned.csv > ~/Storage/data/${1}_sorted.csv
 
-echo "Adding header to files"
+echo "Adding header to file"
 
-(echo "pan,amount,mcc,month,day,hour,dow,com_id" ; cat ~/Storage/data/${1}_sorted.csv) > ~/Storage/data/temp.csv && mv ~/Storage/data/temp.csv ~/Storage/data/${1}_sorted.csv
+(echo "pan,amount,mcc,year,month,day,hour,min,dow,com_id" ; cat ~/Storage/data/${1}_sorted.csv) > ~/Storage/data/temp.csv && mv ~/Storage/data/temp.csv ~/Storage/data/${1}_sorted.csv
 
 res2=`date +%s`
 
