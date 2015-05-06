@@ -191,8 +191,9 @@ def create_output():
 		warnings.filterwarnings("ignore", message="divide by zero encountered in TRUE_divide")
 		mtx = np.where(counts==0, -1, mtx/counts)
 
-	plotter.plot_matrix(mtx,max_range,min_range,"Model " + modelName + " precision","../results/model_" + modelName + "_matrix.png")
+	#plotter.plot_matrix(mtx,max_range,min_range,"Model " + modelName + " precision","../results/model_" + modelName + "_matrix.png")
 	plotter.plot_histogram(np.asarray(precision),"Model " + modelName + " precision","../results/model_" + modelName + "_histogram.png")
+	plotter.plot_row_matrix(mtx,max_range,"Model " + modelName + " precision","../results/model_" + modelName + "_matrix.png")
 
 	print "Evaluation completed!"
 
