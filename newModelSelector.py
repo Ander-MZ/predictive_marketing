@@ -191,9 +191,9 @@ def create_output():
 		warnings.filterwarnings("ignore", message="divide by zero encountered in TRUE_divide")
 		mtx = np.where(counts==0, -1, mtx/counts)
 
-	#plotter.plot_matrix(mtx,max_range,min_range,"Model " + modelName + " precision","../results/model_" + modelName + "_matrix.png")
-	plotter.plot_histogram(np.asarray(precision),"Model " + modelName + " precision","../results/model_" + modelName + "_histogram.png")
-	plotter.plot_row_matrix(mtx,max_range,"Model " + modelName + " precision","../results/model_" + modelName + "_row_matrix.png")
+	#plotter.plot_matrix(mtx,max_range,min_range,"Precision of model " + modelName,"../results/model_" + modelName + "_matrix.png")
+	plotter.plot_histogram(np.asarray(precision),"Precision of model " + modelName,"../results/model_" + modelName + "_histogram.png")
+	plotter.plot_row_matrix(mtx,max_range,"Precision of model " + modelName,"../results/model_" + modelName + "_row_matrix.png")
 
 	print "Evaluation completed!"
 
@@ -239,19 +239,21 @@ progress = 0
 for pan, grp in itertools.groupby(data, key=operator.itemgetter(0)):
 
 	allHistory = map(operator.itemgetter(range(1,len(types))),grp)
-	history = []
+	card_history = []
 	progress += 1
 
 	if progress%1000==0:
 		sys.stdout.write("\tCurrent progress: %d cards processed\r" % (progress) )
 		sys.stdout.flush()
 
-	# History = {{AMOUNT, MCC, ...},{AMOUNT, MCC, ...},...,{AMOUNT, MCC, ...}}
+	# CardHistory = {AMOUNT,MCC,YEAR,MONTH,DAY,HOUR,MIN,DOW,COM_ID}
+
+	# AllHistory = {{AMOUNT, MCC, ...},{AMOUNT, MCC, ...},...,{AMOUNT, MCC, ...}}
 
 	for t in allHistory:
-		history.append(str(t[4]))
+		card_history.append(str(t[8]))
 
-	fast_iter(history)
+	fast_iter(card_history)
 
 	del grp
 
