@@ -72,7 +72,7 @@ def plot_row_matrix(m,xpartition,title,filename,norm=False):
     plt.title(title+'\n\n')
     plt.colorbar()
     
-    plt.xlabel('Max history')
+    plt.xlabel('Number of transactions')
     plt.xticks(range(len(xtags)),xtags)
     locs, labels = plt.xticks()
     plt.setp(labels, rotation=90)
