@@ -226,11 +226,13 @@ types = {'pan':'str',
 	  'dow':'int',
 	  'com_id':'str'}
 
+cols = [0,9]
+
 t0 = millis = int(round(time.time() * 1000))
 
 print ">Reading CSV file"
 
-data = np.asarray(pd.read_csv(history_file,dtype=types))
+data = np.asarray(pd.read_csv(history_file,dtype=types,usecols=cols))
 
 print ">Processing CSV file"
 
@@ -238,7 +240,7 @@ progress = 0
 
 for pan, grp in itertools.groupby(data, key=operator.itemgetter(0)):
 
-	allHistory = map(operator.itemgetter(range(1,len(types))),grp)
+	allHistory = map(operator.itemgetter(range(1,len(cols))),grp)
 	card_history = []
 	progress += 1
 
@@ -251,7 +253,7 @@ for pan, grp in itertools.groupby(data, key=operator.itemgetter(0)):
 	# AllHistory = {{AMOUNT, MCC, ...},{AMOUNT, MCC, ...},...,{AMOUNT, MCC, ...}}
 
 	for t in allHistory:
-		card_history.append(str(t[8]))
+		card_history.append(str(t[0])) # Index depends of 'cols' array
 
 	fast_iter(card_history)
 
