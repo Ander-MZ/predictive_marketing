@@ -44,9 +44,11 @@ types = {'pan':'str',
 	  'dow':'int',
 	  'com_id':'str'}
 
+cols = [0,1]
+
 print ">Reading file"
 
-data = np.asarray(pd.read_csv(ifile,dtype=types))
+data = np.asarray(pd.read_csv(ifile,dtype=types,usecols=cols))
 
 print ">Extracting transactions"
 
@@ -58,7 +60,7 @@ amounts = []
 
 for pan, grp in itertools.groupby(data, key=operator.itemgetter(0)):
 
-	history = map(operator.itemgetter(range(1,len(types))),grp)
+	history = map(operator.itemgetter(range(1,len(cols))),grp)
 	amount_acc = 0.0
 
 	for t in history:
