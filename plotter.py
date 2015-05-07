@@ -102,7 +102,7 @@ def plot_histogram(data,title,filename,b=20):
 	plt.xlabel("Value")
 	plt.ylabel("Frequency")
 	locs, labels = plt.xticks()
-	plt.setp(labels, rotation=90)
+	plt.setp(labels, rotation=0) # +90 for vertical text
 	
 	plt.savefig(filename)
 	#plt.show()
