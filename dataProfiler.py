@@ -74,12 +74,22 @@ for pan, grp in itertools.groupby(data, key=operator.itemgetter(0)):
 		sys.stdout.flush()
 
 
+frequencies = np.asarray(frequencies)
+amounts = np.asarray(amounts)
+
+frequencies = frequencies[frequencies<500]
+amounts = amounts[amounts<25000]
+
 sys.stdout.write("\tCurrent progress: %d cards grouped\r\n" % (len(frequencies)) )
 sys.stdout.flush()
 
-plotter.plot_histogram(np.asarray(frequencies),"History length","../results/history_length_histogram.png")
+plotter.plot_histogram(np.asarray(frequencies),"History length","../results/history_length_histogram.png",40)
 
-plotter.plot_histogram(np.asarray(amounts),"Mean purchase amount","../results/mean_amounts_histogram.png")
+plotter.plot_histogram(np.asarray(amounts),"Mean purchase amount","../results/mean_amounts_histogram.png",50)
+
+print "Mean purchase amount: " , np.mean(np.asarray(amounts))
+
+print "Median purchase amount: " , np.median(np.asarray(amounts))
 
 print "Number of cards: " , len(frequencies)
 
