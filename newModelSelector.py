@@ -28,7 +28,6 @@ import plotter
 ### =================================================================================
 
 # Global variables
-precision = 0.0
 results = []
 
 # Store input and output file names
@@ -158,12 +157,10 @@ def select_and_evaluate_model(history,n_t):
 
 def fast_iter(history):
 
-	global precision
 	global results
 
 	n_t = int(math.floor(alpha*len(history)))
 	p = select_and_evaluate_model(history,n_t)
-	precision += p
 	results.append((p,n_t))
 
 def create_output():
@@ -192,7 +189,7 @@ def create_output():
 		mtx = np.where(counts==0, -1, mtx/counts)
 
 	#plotter.plot_matrix(mtx,max_range,min_range,"Precision of model " + modelName,"../results/model_" + modelName + "_matrix.png")
-	plotter.plot_histogram(np.asarray(precision),"Precision of model " + modelName,"../results/model_" + modelName + "_histogram.png")
+	#plotter.plot_histogram(np.asarray(precision),"Precision of model " + modelName,"../results/model_" + modelName + "_histogram.png")
 	plotter.plot_row_matrix(mtx,max_range,"Precision of model " + modelName,"../results/model_" + modelName + "_row_matrix.png")
 
 	print "Evaluation completed!"
