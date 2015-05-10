@@ -226,7 +226,9 @@ types = {'pan':'str',
 	  'dow':'int',
 	  'com_id':'str'}
 
-cols = [0,9]
+### PAN = 0, AMOUNT = 1,MCC = 2, YEAR = 3, MONTH = 4,DAY = 5, HOUR = 6, MIN = 7, DOW = 8, COM_ID = 9
+
+cols = [0,8,9]
 
 t0 = millis = int(round(time.time() * 1000))
 
@@ -253,7 +255,7 @@ for pan, grp in itertools.groupby(data, key=operator.itemgetter(0)):
 	# AllHistory = {{AMOUNT, MCC, ...},{AMOUNT, MCC, ...},...,{AMOUNT, MCC, ...}}
 
 	for t in allHistory:
-		card_history.append(str(t[0])) # Index depends of 'cols' array
+		card_history.append( (str(t[0]),str(t[1])) ) # Index depends of 'cols' array
 
 	fast_iter(card_history)
 
