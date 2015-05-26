@@ -2,20 +2,21 @@
 from __future__ import division
 import numpy as np
 import collections
+import pandas as pd
 import sys, getopt
 from itertools import izip, islice, product
 import scipy.sparse as sps
-from xml.etree import cElementTree
 import math
 import matplotlib
 import matplotlib.pyplot as plt
 import warnings
-from multiprocessing import Pool, Value
 import time
+import itertools
+import operator
 
 # Models
 
-import model0
+import model0_old
 import model1
 import model2
 import model3
@@ -26,22 +27,24 @@ import plotter
 
 ### =================================================================================
 
-# Global Variables
-total = 0
-counter = None
+# Global variables
+precision = 0.0
+results = []
 
-# Command line arguments
-history_file=""
-results_file=""
+# Store input and output file names
+history_file=''
+results_file=''
 alpha=0.75
 modelName = ""
 m0_max_history = 1000
 m1_max_history = 1
 m2_max_history = 1
+firstN = 1
+evaltype = "ALL"
  
 # Read command line args (training file, results file, proportion of history)
 try:
-	myopts, args = getopt.getopt(sys.argv[1:],"i:o:a:n:0:1:2:",["input=","output=","alpha=","name=","model0=","model1=","model2="])
+	myopts, args = getopt.getopt(sys.argv[1:],"i:o:a:t:n:m:0:1:2:",["input=","output=","alpha=","evaltype=","firstN=","name=","model0=","model1=","model2="])
 except getopt.GetoptError:
 	print "Arguments are incomplete"
 	sys.exit(2)
@@ -56,7 +59,11 @@ for opt, arg in myopts:
         results_file=arg
     elif opt in ("-a","--alpha"):
         alpha=float(arg)
-    elif opt in ("-n","--name"):
+    elif opt in ("-t","--evaltype"):
+        evaltype=arg       
+    elif opt in ("-n","--firstN"):
+        firstN=int(arg)        
+    elif opt in ("-m","--modelName"):
         modelName=arg
     elif opt in ("-0","--model0"):
         m0_max_history=int(arg)   
@@ -66,6 +73,8 @@ for opt, arg in myopts:
         m2_max_history=int(arg)   
     else:
         print("Usage: %s -i input -o output -a alpha -0 model0 -1 model1 -2 model2" % sys.argv[0])
+
+print "Model: " , modelName
 
 ### =================================================================================
 
@@ -80,6 +89,8 @@ def assign_partition(value,partition):
 		i += 1
 
 	return i-1
+
+# Updates the matrix containing the results of all evaluations
 
 # Updates the matrix containing the results of all evaluations
 
@@ -114,98 +125,50 @@ def update_evaluation_matrix(mtx,counts,results,xpartition,ypartition):
 
 def select_and_evaluate_model(history,n_t):
 
+	global firstN
+
 	if len(history) < 2: # Not enought data for training or testing
 		
 		return 0.0
 
 	elif n_t <= m0_max_history: # Model 0
 
-		return model0.evaluate(history[:n_t],history[n_t:])
+		if evaltype == "ALL":
+			return model0_old.evaluateAllFirstN(history[:n_t],history[n_t:],firstN)
+		else:
+			return model0_old.evaluateAnyFirstN(history[:n_t],history[n_t:],firstN)
 
 	elif n_t <= m1_max_history: # Model 1 (Minimum history length = 9 with alpha = 0.75)	
 
-		return model1.evaluate(history[:n_t],history[n_t:],1)
+		if evaltype == "ALL":
+			return model1.evaluateAllFirstN(history[:n_t],history[n_t:],firstN,1)
+		else:
+			return model1.evaluateAnyFirstN(history[:n_t],history[n_t:],firstN,1)
 
 	elif n_t <= m2_max_history: # Model 2 (Minimum history length = 9 with alpha = 0.75)	
 
-		return model2.evaluate(history[:n_t],history[n_t:],2)
+		if evaltype == "ALL":
+			return model2.evaluateAllFirstN(history[:n_t],history[n_t:],firstN,2)
+		else:
+			return model2.evaluateAnyFirstN(history[:n_t],history[n_t:],firstN,2)
 
 	else: # More than
 		
 		return -1.0
 
-	print ""
+def fast_iter(history):
 
-# Prepares global counter for use within processes
-
-def init(args):
-    global counter
-    counter = args
-
-# Receives an XML node with all the cards and returns a list containing 
-# the history of transactions of each card
-
-def extract_history(cards):
-
-	results = []
-
-	for card in cards:
-
-		pan = card.attrib.get('PAN')
-		history = []
-
-		for t in card.find('History'):
-			history.append(t.attrib.get('COM_ID'))
-
-		results.append(history)
-
-	return results
-
-# This is used for *** PARALLEL *** distribution of tasks
-# Receives a card node (XML) and executes the 'Select and Evaluate' method. 
-
-def exec_task(history):
-
-	global counter
-	counter.value += 1
+	global precision
+	global results
 
 	n_t = int(math.floor(alpha*len(history)))
+	p = select_and_evaluate_model(history,n_t)
+	precision += p
+	results.append((p,n_t))
 
-	return ( select_and_evaluate_model(history,n_t) , n_t)
+def create_output():
 
-# Receives the XML file containing all the transaction history data, and parses it to populate
-# the dictionary required by the models
-
-def parse_XML(doc):
-
-	cards = doc.getroot()
-
-	# Create general transition matrix (Model 3)
-	# (general_mtx,row_code,col_code) = model3.create_transition_matrix(extract_history(cards), 1)
-
-	# Updating global variable for progress measuring purposes
-	global total
-	total = len(cards)
-
-	global counter
-	counter = Value('i', 0)
-
-	# Executes card history evaluation in parallel
-	pool = Pool(processes=8, initializer = init, initargs = (counter, ))
-	rs = pool.map_async(exec_task, extract_history(cards), chunksize = 1)
-
-	while(True):
-		if (rs.ready()): 
-		    break
-		remaining = rs._number_left
-		sys.stdout.write("\tCurrent progress: %.2f %% of cards analyzed\r" % (100*(total-remaining)/total) )
-		sys.stdout.flush()
-
-		time.sleep(0.1)
-
-	rs.wait()
-	
-	results = rs.get()
+	global results
 
 	# Configurations for evaluation matrix
 	m_min_history = 0
@@ -220,31 +183,31 @@ def parse_XML(doc):
 	###
 
 	mtx = update_evaluation_matrix(mtx,counts,results,min_range,min_range)
-
-	sys.stdout.write("\tCurrent progress: %.2f %% of cards analyzed\r\n" % (100.00) )
-	sys.stdout.flush()
-
 	precision = [float(i[0]) for i in results]
 
 	print "Average precision: " , sum(precision)/len(precision) , " ( min-history = " , min(1,m_min_history) , ", max-history = " , m_max_history, " )"
 
-	plotter.plot_matrix(mtx,max_range,min_range,"Model " + modelName + " precision","../results/model_"+modelName+"_matrix.png")
-	plotter.plot_histogram(np.asarray(precision),"Model " + modelName + " precision","../results/model_"+modelName+"_histogram.png")
+	with warnings.catch_warnings():
+		warnings.filterwarnings("ignore", message="divide by zero encountered in TRUE_divide")
+		mtx = np.where(counts==0, -1, mtx/counts)
+
+	#plotter.plot_matrix(mtx,max_range,min_range,"Precision of model " + modelName,"../results/model_" + modelName + "_matrix.png")
+	plotter.plot_histogram(np.asarray(precision),"Precision of model " + modelName,"../results/model_" + modelName + "_histogram.png")
+	plotter.plot_row_matrix(mtx,max_range,"Precision of model " + modelName,"../results/model_" + modelName + "_row_matrix.png")
 
 	print "Evaluation completed!"
 
+def save_results(dict_pan_results):
 
-def save_results(results):
-
-	mean = np.mean(results)
-	median = np.median(results)
+	mean = np.mean(dict_pan_results.values())
+	median = np.median(dict_pan_results.values())
 
 	print "Mean: " , mean , ", Median: " , median
 
 	output_file = open(results_file,'w')
 	write = output_file.write
 
-	for precision in results:
+	for pan, precision in dict_pan_results.items():
 		write("%s%s" % (precision,"\n"))
 
 	output_file.close
@@ -252,16 +215,60 @@ def save_results(results):
 
 ### =================================================================================
 
+types = {'pan':'str',
+	  'amount':'float',
+	  'mcc':'str',
+	  'year':'int',
+	  'month':'int',
+	  'day':'int',
+	  'hour':'int',
+	  'min':'int',
+	  'dow':'int',
+	  'com_id':'str'}
+
+### PAN = 0, AMOUNT = 1,MCC = 2, YEAR = 3, MONTH = 4,DAY = 5, HOUR = 6, MIN = 7, DOW = 8, COM_ID = 9
+
+cols = [0,9]
+
 t0 = millis = int(round(time.time() * 1000))
 
-print ">Reading file"
+print ">Reading CSV file"
 
-tree = cElementTree.parse(history_file)
+data = np.asarray(pd.read_csv(history_file,dtype=types,usecols=cols))
 
-print ">Parsing file"
+print ">Processing CSV file"
 
-parse_XML(tree)
+progress = 0
+
+for pan, grp in itertools.groupby(data, key=operator.itemgetter(0)):
+
+	allHistory = map(operator.itemgetter(range(1,len(cols))),grp)
+	card_history = []
+	progress += 1
+
+	if progress%1000==0:
+		sys.stdout.write("\tCurrent progress: %d cards processed\r" % (progress) )
+		sys.stdout.flush()
+
+	# CardHistory = {AMOUNT,MCC,YEAR,MONTH,DAY,HOUR,MIN,DOW,COM_ID}
+
+	# AllHistory = {{AMOUNT, MCC, ...},{AMOUNT, MCC, ...},...,{AMOUNT, MCC, ...}}
+
+	for t in allHistory:
+		card_history.append( str(t[0]) ) # Index depends of 'cols' array
+
+	fast_iter(card_history)
+
+	del grp
+
+sys.stdout.write("\tCurrent progress: %d cards processed\r\n" % (progress) )
+sys.stdout.flush()
+
+print ">Creating output"
+
+create_output()
 
 t1 = millis = int(round(time.time() * 1000))
 
 print "Time elapsed (ms): " , t1-t0
+

@@ -29,10 +29,10 @@ def index_of_max(mtx,row_index):
 
 	row = mtx[row_index,:].todense()
 
-	if np.sum(row) == 0:
+	if np.sum(row) == 0: # All cols are 0
 		# return -1
 		return randint(0,np.shape(row)[1]-1) # Random col index
-	elif np.sum(row) / np.shape(row)[1] == row[0,0]:
+	elif np.sum(row) / np.shape(row)[1] == row[0,0]: # All cols are same value
 		# return -2
 		return randint(0,np.shape(row)[1]-1) # Random col index
 	else:
@@ -106,42 +106,6 @@ def create_sparse_matrix(chain,order):
 	# Transform matrix into Compressed Sparse Row format to allow arithmetic manipulation and slicing
 
 	return (mtx.tocsr(),row_code,col_code)
-
-
-# Receives a list with the training data (visited MCC / COM_ID) and a list of test data 
-# (visited MCC / COM_ID) on the next period, and returns a score between 0 and 1 for the prediction
-
-# NOTE: Minimum test data: 3 elements
-
-def evaluate(trainingData, testData, order=2):
-
-	(mtx,row_code,col_code) = create_sparse_matrix(trainingData,order)
-
-	n = len(testData)-order # Number of n-tuples in chain of test data
-
-	correct = 0
-
-	if n > 0:
-
-		# We add the last 'order' elements from training data to allow a prediction for
-		# the first element on the test data
-
-		for t in ntuples(trainingData[len(trainingData)-order:]+testData,order+1):
-
-			row = row_code[frozenset(t[:order])] # State n
-			observed_col = col_code[t[order:][0]] # State n+1
-
-			if not row == [] and not observed_col == []: # If both states are on the matrix
-
-				if observed_col == index_of_max(mtx,row): # State n+1 with highest probability
-					correct += 1
-
-			elif row ==[] and not observed_col == []: # Sequence of business not in matrix
-
-				if observed_col == top_freq_col(mtx): # Most frequent state for given 'ngram'
-					correct += 1
-
-	return correct / len(testData)
 
 def evaluateAllFirstN(trainingData, testData, n, order=2):
 

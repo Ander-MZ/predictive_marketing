@@ -18,19 +18,19 @@ def most_common(lst,n=1):
 	else:
 		return collections.Counter(lst).most_common(n)	
 
-# Receives a list with the training data (visited MCC / COM_ID) and a list of test data 
-# (visited MCC / COM_ID) on the next period, and returns a score between 0 and 1 for the prediction
+# Receives a list of transactions with the form (DOW,COM_ID) and returns 2 lists, one with
+# transactions made between Monday - Friday and the other with transactions of Saturday - Sunday
 
-def evaluate(trainingData, testData):
+def filterByDOW(lst):
+	weekday = []
+	weekend = []
+	for t in lst:
+		if t[0] in ['6','0']: # Weekend
+			weekend.append(t[1])
+		else:
+			weekday.append(t[1])
 
-	top = most_common(trainingData)
-	correct = 0
-
-	for v in testData:
-		if v == top:
-			correct += 1
-
-	return correct / len(testData)
+	return (weekday,weekend)
 
 # Receives a list with the training data (visited MCC / COM_ID) and a list of test data 
 # (visited MCC / COM_ID) on the next period, and returns a score between 0 and 1 for the 
@@ -38,28 +38,67 @@ def evaluate(trainingData, testData):
 
 def evaluateAllFirstN(trainingData, testData, n):
 
-	top = most_common(trainingData)
+	(weekday,weekend) = filterByDOW(trainingData)
+
+	top_weekday = -1
+	top_weekend = -1
+
+	if len(weekday) > 0:
+		top_weekday = most_common(weekday)
+
+	if len(weekend) > 0:	
+		top_weekend = most_common(weekend)
+
+	if top_weekday == -1 and top_weekend != -1: # Transactions only seen on weekends
+		top_weekday = top_weekend
+	elif top_weekday != -1 and top_weekend == -1: # Transactions only seen on weekdays
+		top_weekend = top_weekday
+
 	correct = 1
 	i = 0
 
 	while i < n and i < len(testData):
 		v = testData[i]
-		if v != top:
-			correct = 0
+
+		if v[0] in ['6','0']: # Weekend
+			if v[1] != top_weekend:
+				correct = 0
+		else: # Weekday
+			if v[1] != top_weekday:
+				correct = 0
 		i += 1
 
 	return correct
 
 def evaluateAnyFirstN(trainingData, testData, n):
 
-	top = most_common(trainingData)
+	(weekday,weekend) = filterByDOW(trainingData)
+
+	top_weekday = -1
+	top_weekend = -1
+
+	if len(weekday) > 0:
+		top_weekday = most_common(weekday)
+
+	if len(weekend) > 0:	
+		top_weekend = most_common(weekend)
+
+	if top_weekday == -1 and top_weekend != -1: # Transactions only seen on weekends
+		top_weekday = top_weekend
+	elif top_weekday != -1 and top_weekend == -1: # Transactions only seen on weekdays
+		top_weekend = top_weekday
+
 	correct = 0
 	i = 0
 
 	while i < n and i < len(testData):
 		v = testData[i]
-		if v == top:
-			correct = 1
+		if v[0] in ['6','0']: # Weekend
+			if v[1] == top_weekend:
+				correct = 1
+		else: # Weekday
+			if v[1] == top_weekday:
+				correct = 1
 		i += 1
 
 	return correct
