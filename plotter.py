@@ -76,9 +76,8 @@ def plot_row_matrix(m,xpartition,title,filename,norm=False):
 	plt.xticks(range(len(xtags)),xtags)
 	locs, labels = plt.xticks()
 	plt.setp(labels, rotation=90)
-  
+
 	plt.savefig(filename)
-	#plt.show()
 
 # Receives a data collection in the form of a Numpy Array
 

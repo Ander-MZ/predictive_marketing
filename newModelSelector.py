@@ -162,11 +162,19 @@ def fast_iter(history):
 	n = 0
 	# Separate history in 2 sections: training (04-08) and test (09)
 	for t in history:
-		if t[2] < 9: # Month less than 9 (September)
+		if int(t[2]) < 9: # Month less than 9 (September)
 			n +=1
 
-	p = select_and_evaluate_model(history,n)
-	results.append((p,n))
+	# Separate history based on a fraction (default: 75%)
+	n_t = int(math.floor(alpha*len(history)))
+
+	print "history: " , history , " n: " , n
+
+	# Only consider cards with transactions on September
+	if n < len(history):
+		p = select_and_evaluate_model(history,n)
+		results.append((p,n))
+
 
 def create_output():
 
@@ -188,10 +196,6 @@ def create_output():
 	precision = [float(i[0]) for i in results]
 
 	print "Average precision: " , sum(precision)/len(precision)
-
-	with warnings.catch_warnings():
-		warnings.filterwarnings("ignore", message="divide by zero encountered in TRUE_divide")
-		mtx = np.where(counts==0, -1, mtx/counts)
 
 	#plotter.plot_matrix(mtx,max_range,min_range,"Precision of model " + modelName,"../results/model_" + modelName + "_matrix.png")
 	#plotter.plot_histogram(np.asarray(precision),"Precision of model " + modelName,"../results/model_" + modelName + "_histogram.png")
@@ -226,9 +230,10 @@ types = {'pan':'str',
 	  'hour':'int',
 	  'min':'int',
 	  'dow':'int',
-	  'com_id':'str'}
+	  'com_id':'str',
+	  't_id':'str'}
 
-### PAN = 0, AMOUNT = 1,MCC = 2, YEAR = 3, MONTH = 4,DAY = 5, HOUR = 6, MIN = 7, DOW = 8, COM_ID = 9
+### PAN = 0, AMOUNT = 1,MCC = 2, YEAR = 3, MONTH = 4,DAY = 5, HOUR = 6, MIN = 7, DOW = 8, COM_ID = 9, T_ID = 10
 
 cols = [0,4,8,9] # {PAN,MONTH,DOW,COM_ID}
 
