@@ -85,13 +85,13 @@ amounts = amounts[amounts<=25000]
 sys.stdout.write("\tCurrent progress: %d cards grouped\r\n" % (len(frequencies)) )
 sys.stdout.flush()
 
-plotter.plot_histogram(np.asarray(frequencies),"History length","../results/history_length_histogram.png",50)
+plotter.plot_histogram(frequencies,"History length","../results/history_length_histogram.png",50)
 
-plotter.plot_histogram(np.asarray(amounts),"Mean purchase amount","../results/mean_amounts_histogram.png",50)
+plotter.plot_histogram(amounts,"Mean purchase amount","../results/mean_amounts_histogram.png",50)
 
-print "Mean purchase amount: " , np.mean(np.asarray(amounts))
+print "Mean purchase amount: " , np.mean(amounts)
 
-print "Median purchase amount: " , np.median(np.asarray(amounts))
+print "Median purchase amount: " , np.median(amounts)
 
 print "Number of cards: " , len(frequencies)
 
