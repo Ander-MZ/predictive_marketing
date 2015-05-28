@@ -29,10 +29,10 @@ def index_of_max(mtx,row_index):
 
 	row = mtx[row_index,:].todense()
 
-	if np.sum(row) == 0:
+	if np.sum(row) == 0: # All cols are 0
 		# return -1
 		return randint(0,np.shape(row)[1]-1) # Random col index
-	elif np.sum(row) / np.shape(row)[1] == row[0,0]:
+	elif np.sum(row) / np.shape(row)[1] == row[0,0]: # All cols are same value
 		# return -2
 		return randint(0,np.shape(row)[1]-1) # Random col index
 	else:
