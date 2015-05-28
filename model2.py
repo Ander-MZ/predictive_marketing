@@ -43,6 +43,12 @@ def index_of_max(mtx,row_index):
 def top_freq_col(mtx):
 	return np.argmax(mtx.sum(axis=0)) # axis=0 -> sum over columns
 
+# Returns a random column index
+
+def randomCol(mtx):
+	col_num = np.shape(mtx[0,:].todense())[1]-1
+	return randint(0,col_num) # Random col index
+
 # Receives a dictionary and a value, and returns the key associated to the given value
 
 def key_of_value(d,value):
@@ -109,6 +115,10 @@ def create_sparse_matrix(chain,order):
 
 def evaluateAllFirstN(trainingData, testData, n, order=2):
 
+	# Remove DOW and MONTH from data (not used here)
+	trainingData = [x[0] for x in trainingData]
+	testData = [x[0] for x in testData]
+
 	(mtx,row_code,col_code) = create_sparse_matrix(trainingData,order)
 
 	correct = 1
@@ -133,7 +143,7 @@ def evaluateAllFirstN(trainingData, testData, n, order=2):
 
 		elif row ==[] and not observed_col == []: # Sequence of business not in matrix
 
-			if observed_col != top_freq_col(mtx): # Most frequent state for given 'ngram'
+			if observed_col != randomCol(mtx): # Random column
 				correct = 0
 
 		else:
@@ -145,6 +155,10 @@ def evaluateAllFirstN(trainingData, testData, n, order=2):
 	return correct
 
 def evaluateAnyFirstN(trainingData, testData, n, order=2):
+
+	# Remove DOW and MONTH from data (not used here)
+	trainingData = [x[0] for x in trainingData]
+	testData = [x[0] for x in testData]
 
 	(mtx,row_code,col_code) = create_sparse_matrix(trainingData,order)
 
@@ -170,7 +184,7 @@ def evaluateAnyFirstN(trainingData, testData, n, order=2):
 
 		elif row ==[] and not observed_col == []: # Sequence of business not in matrix
 
-			if observed_col == top_freq_col(mtx): # Most frequent state for given 'ngram'
+			if observed_col == randomCol(mtx): # Random column
 				correct = 1
 
 		i += 1

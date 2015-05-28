@@ -122,7 +122,7 @@ def update_evaluation_matrix(mtx,counts,results,xpartition,ypartition):
 # Based on the characteristics of the transaction history of the card, the best
 # model is used to create the prediction
 
-def select_and_evaluate_model(history,n_t):
+def select_and_evaluate_model(history,n):
 
 	global firstN
 
@@ -130,26 +130,26 @@ def select_and_evaluate_model(history,n_t):
 		
 		return 0.0
 
-	elif n_t <= m0_max_history: # Model 0
+	elif n <= m0_max_history: # Model 0
 
 		if evaltype == "ALL":
-			return model0.evaluateAllFirstN(history[:n_t],history[n_t:],firstN)
+			return model0.evaluateAllFirstN(history[:n],history[n:],firstN)
 		else:
-			return model0.evaluateAnyFirstN(history[:n_t],history[n_t:],firstN)
+			return model0.evaluateAnyFirstN(history[:n],history[n:],firstN)
 
-	elif n_t <= m1_max_history: # Model 1 (Minimum history length = 9 with alpha = 0.75)	
+	elif n <= m1_max_history: # Model 1
 
 		if evaltype == "ALL":
-			return model1.evaluateAllFirstN(history[:n_t],history[n_t:],firstN,1)
+			return model1.evaluateAllFirstN(history[:n],history[n:],firstN,1)
 		else:
-			return model1.evaluateAnyFirstN(history[:n_t],history[n_t:],firstN,1)
+			return model1.evaluateAnyFirstN(history[:n],history[n:],firstN,1)
 
-	elif n_t <= m2_max_history: # Model 2 (Minimum history length = 9 with alpha = 0.75)	
+	elif n <= m2_max_history: # Model 2
 
 		if evaltype == "ALL":
-			return model2.evaluateAllFirstN(history[:n_t],history[n_t:],firstN,2)
+			return model2.evaluateAllFirstN(history[:n],history[n:],firstN,2)
 		else:
-			return model2.evaluateAnyFirstN(history[:n_t],history[n_t:],firstN,2)
+			return model2.evaluateAnyFirstN(history[:n],history[n:],firstN,2)
 
 	else: # More than
 		
@@ -159,9 +159,19 @@ def fast_iter(history):
 
 	global results
 
+	n = 0
+	# Separate history in 2 sections: training (04-08) and test (09)
+	for t in history:
+		if int(t[2]) < 9: # Month less than 9 (September)
+			n +=1
+
+	# Separate history based on a fraction (default: 75%)
 	n_t = int(math.floor(alpha*len(history)))
-	p = select_and_evaluate_model(history,n_t)
-	results.append((p,n_t))
+
+	# Only consider cards with transactions on September
+	if n < len(history):
+		p = select_and_evaluate_model(history,n)
+		results.append((p,n))
 
 def create_output():
 
@@ -182,11 +192,7 @@ def create_output():
 	mtx = update_evaluation_matrix(mtx,counts,results,min_range,min_range)
 	precision = [float(i[0]) for i in results]
 
-	print "Average precision: " , sum(precision)/len(precision) , " ( min-history = " , min(1,m_min_history) , ", max-history = " , m_max_history, " )"
-
-	with warnings.catch_warnings():
-		warnings.filterwarnings("ignore", message="divide by zero encountered in TRUE_divide")
-		mtx = np.where(counts==0, -1, mtx/counts)
+	print "Average precision: " , sum(precision)/len(precision)
 
 	#plotter.plot_matrix(mtx,max_range,min_range,"Precision of model " + modelName,"../results/model_" + modelName + "_matrix.png")
 	#plotter.plot_histogram(np.asarray(precision),"Precision of model " + modelName,"../results/model_" + modelName + "_histogram.png")
@@ -221,11 +227,12 @@ types = {'pan':'str',
 	  'hour':'int',
 	  'min':'int',
 	  'dow':'int',
-	  'com_id':'str'}
+	  'com_id':'str',
+	  't_id':'str'}
 
-### PAN = 0, AMOUNT = 1,MCC = 2, YEAR = 3, MONTH = 4,DAY = 5, HOUR = 6, MIN = 7, DOW = 8, COM_ID = 9
+### PAN = 0, AMOUNT = 1,MCC = 2, YEAR = 3, MONTH = 4,DAY = 5, HOUR = 6, MIN = 7, DOW = 8, COM_ID = 9, T_ID = 10
 
-cols = [0,8,9]
+cols = [0,4,8,9] # {PAN,MONTH,DOW,COM_ID}
 
 t0 = millis = int(round(time.time() * 1000))
 
@@ -251,9 +258,11 @@ for pan, grp in itertools.groupby(data, key=operator.itemgetter(0)):
 
 	# AllHistory = {{AMOUNT, MCC, ...},{AMOUNT, MCC, ...},...,{AMOUNT, MCC, ...}}
 
-	for t in allHistory:
-		card_history.append( (str(t[0]),str(t[1])) ) # Index depends of 'cols' array
+	# t = {MONTH,DOW,COM_ID}
 
+	for t in allHistory:
+		card_history.append( (str(t[1]),str(t[2]),str(t[0])) ) # Index depends of 'cols' array
+															   # {DOW, COM_ID, MONTH}
 	fast_iter(card_history)
 
 	del grp
