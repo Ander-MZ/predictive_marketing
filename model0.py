@@ -18,6 +18,14 @@ def most_common(lst,n=1):
 	else:
 		return collections.Counter(lst).most_common(n)	
 
+# Returns '1' if transaction ocurred on Weekend, '0' if ocurred on Weekday
+
+def getDowCode(transaction):
+	if transaction[0] in ['6','0']: # Weekend
+		return 1
+	else:
+		return 0
+
 # Receives a list of transactions with the form (DOW,COM_ID) and returns 2 lists, one with
 # transactions made between Monday - Friday and the other with transactions of Saturday - Sunday
 
@@ -32,6 +40,21 @@ def filterByDOW(lst):
 
 	return (weekday,weekend)
 
+# Predicts the DOW for each of the transactions in the testData. This method uses the previous
+# transaction's DOW to predict the DOW of the next transaction. It is NOT using the future to
+# predict, as is real life for any transaction all the previous ones are available.
+
+def predictDows(trainingData, testData):
+	predicted = []
+	for i in range(len(testData)):
+		if i==0:
+			t = trainingData[len(trainingData)-1]
+			predicted.append(getDowCode(t))		
+		else:			
+			predicted.append(getDowCode(testData[i-1]))
+
+	return predicted
+
 # Receives a list with the training data (visited MCC / COM_ID) and a list of test data 
 # (visited MCC / COM_ID) on the next period, and returns a score between 0 and 1 for the 
 # prediction of the FIRST transaction
@@ -39,6 +62,7 @@ def filterByDOW(lst):
 def evaluateAllFirstN(trainingData, testData, n):
 
 	(weekday,weekend) = filterByDOW(trainingData)
+	predictedDows = predictDows(trainingData, testData)
 
 	top_weekday = -1
 	top_weekend = -1
@@ -59,8 +83,8 @@ def evaluateAllFirstN(trainingData, testData, n):
 
 	while i < n and i < len(testData):
 		v = testData[i]
-
-		if v[0] in ['6','0']: # Weekend
+		p = predictedDows[i]
+		if p == 1: # Weekend
 			if v[1] != top_weekend:
 				correct = 0
 		else: # Weekday
@@ -73,6 +97,7 @@ def evaluateAllFirstN(trainingData, testData, n):
 def evaluateAnyFirstN(trainingData, testData, n):
 
 	(weekday,weekend) = filterByDOW(trainingData)
+	predictedDows = predictDows(trainingData, testData)
 
 	top_weekday = -1
 	top_weekend = -1
@@ -93,7 +118,8 @@ def evaluateAnyFirstN(trainingData, testData, n):
 
 	while i < n and i < len(testData):
 		v = testData[i]
-		if v[0] in ['6','0']: # Weekend
+		p = predictedDows[i]
+		if p == 1: # Weekend
 			if v[1] == top_weekend:
 				correct = 1
 		else: # Weekday
