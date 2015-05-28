@@ -116,8 +116,8 @@ def create_sparse_matrix(chain,order):
 def evaluateAllFirstN(trainingData, testData, n, order=2):
 
 	# Remove DOW and MONTH from data (not used here)
-	trainingData = [x[0] for x in trainingData]
-	testData = [x[0] for x in testData]
+	trainingData = [x[1] for x in trainingData]
+	testData = [x[1] for x in testData]
 
 	(mtx,row_code,col_code) = create_sparse_matrix(trainingData,order)
 
@@ -157,8 +157,8 @@ def evaluateAllFirstN(trainingData, testData, n, order=2):
 def evaluateAnyFirstN(trainingData, testData, n, order=2):
 
 	# Remove DOW and MONTH from data (not used here)
-	trainingData = [x[0] for x in trainingData]
-	testData = [x[0] for x in testData]
+	trainingData = [x[1] for x in trainingData]
+	testData = [x[1] for x in testData]
 
 	(mtx,row_code,col_code) = create_sparse_matrix(trainingData,order)
 
