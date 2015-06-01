@@ -6,6 +6,7 @@ import sys, getopt
 from itertools import izip, islice, product
 import scipy.sparse as sps
 from random import randint
+import warnings
 
 ### =================================================================================
 
@@ -107,9 +108,8 @@ def create_sparse_matrix(chain,order):
 		append_f(1) 
 
 	# Create a sparse matrix in 'coo' format with # rows = (states^order) and # cols = states 
-
+	warnings.filterwarnings("ignore")
 	mtx = sps.coo_matrix((f, (row, col)), shape=(len(rows), len(states)))
-
 	# Transform matrix into Compressed Sparse Row format to allow arithmetic manipulation and slicing
 
 	mtx = mtx.tocsr()
@@ -127,81 +127,120 @@ def create_sparse_matrix(chain,order):
 
 def evaluateAllFirstN(trainingData, testData, n, order=1):
 
-	# Remove DOW and MONTH from data (not used here)
-	trainingData = [x[1] for x in trainingData]
-	testData = [x[1] for x in testData]
+	if n > len(testData):
+		return -1.0 # Ignore this card for this specific test
+	else:
 
-	(mtx,row_code,col_code) = create_sparse_matrix(trainingData,order)
+		# Remove DOW and MONTH from data (not used here)
+		trainingData = [x[1] for x in trainingData]
+		testData = [x[1] for x in testData]
 
-	correct = 1
-	i = 0
+		(mtx,row_code,col_code) = create_sparse_matrix(trainingData,order)
 
-	# We add the last 'order' elements from training data to allow a prediction for
-	# the first element on the test data
+		# We add the last 'order' elements from training data to allow a prediction for
+		# the first element on the test data
 
-	tuples = ntuples(trainingData[len(trainingData)-order:]+testData,order+1)
+		tuples = ntuples(trainingData[len(trainingData)-order:]+testData,order+1)
 
-	while correct == 1 and i < n and i < len(tuples):
+		real_tuples = ntuples(testData,n)
+		real_indices = []
 
-		t = tuples[i]
+		s = len(col_code)
 
-		row = row_code[t[:order]] # State n
-		observed_col = col_code[t[order:][0]] # State n+1
+		for t in real_tuples:
+			tmp = []
+			for c in t:
+				v = col_code[c]
+				if v == []:
+					tmp.append(randint(0,s))
+				else:
+					tmp.append(v)
 
-		if not row == [] and not observed_col == []: # If both states are on the matrix
+			real_indices.append(tmp)
 
-			if observed_col != index_of_max(mtx,row): # State n+1 with highest probability
-				correct = 0
+		predictions = [] 
 
-		elif row ==[] and not observed_col == []: # Sequence of business not in matrix
+		correct = 0
 
-			if observed_col != randomCol(mtx): # Random column
-				correct = 0
+		for t in tuples:
 
-		else:
+			row = row_code[t[:order]] # State n
+			observed_col = col_code[t[order:][0]] # State n+1
 
-			correct = 0
+			if not row == [] and not observed_col == []: # If both states are on the matrix
+				predictions.append(index_of_max(mtx,row))
 
-		i += 1
+			else: # Sequence of business not in matrix
+				predictions.append(randomCol(mtx)) # Random column
 
-	return correct
+		predicted_tuples = [list(t) for t in ntuples(predictions,n)]
+
+		acc = 0
+
+		for i in range(len(real_indices)):
+			#print "R: " , real_indices[i] , ", R: " , predicted_tuples[i] , real_indices[i] == predicted_tuples[i]
+			if real_indices[i] == predicted_tuples[i]:
+				acc += 1
+
+		return acc / len(real_tuples)
 
 def evaluateAnyFirstN(trainingData, testData, n, order=1):
 
-	# Remove DOW and MONTH from data (not used here)
-	trainingData = [x[1] for x in trainingData]
-	testData = [x[1] for x in testData]
+	if n > len(testData):
+		return -1.0 # Ignore this card for this specific test
+	else:
 
-	(mtx,row_code,col_code) = create_sparse_matrix(trainingData,order)
+		# Remove DOW and MONTH from data (not used here)
+		trainingData = [x[1] for x in trainingData]
+		testData = [x[1] for x in testData]
 
-	correct = 0
-	i = 0
+		(mtx,row_code,col_code) = create_sparse_matrix(trainingData,order)
 
-	# We add the last 'order' elements from training data to allow a prediction for
-	# the first element on the test data
+		# We add the last 'order' elements from training data to allow a prediction for
+		# the first element on the test data
 
-	tuples = ntuples(trainingData[len(trainingData)-order:]+testData,order+1)
+		tuples = ntuples(trainingData[len(trainingData)-order:]+testData,order+1)
 
-	while correct == 0 and i < n and i < len(tuples):
+		real_tuples = ntuples(testData,n)
+		real_indices = []
 
-		t = tuples[i]
+		s = len(col_code)
 
-		row = row_code[t[:order]] # State n
-		observed_col = col_code[t[order:][0]] # State n+1
+		for t in real_tuples:
+			tmp = []
+			for c in t:
+				v = col_code[c]
+				if v == []:
+					tmp.append(randint(0,s))
+				else:
+					tmp.append(v)
 
-		if not row == [] and not observed_col == []: # If both states are on the matrix
+			real_indices.append(tmp)
 
-			if observed_col == index_of_max(mtx,row): # State n+1 with highest probability
-				correct = 1
+		predictions = [] 
 
-		elif row ==[] and not observed_col == []: # Sequence of business not in matrix
+		correct = 0
 
-			if observed_col == randomCol(mtx): # Random column
-				correct = 1
+		for t in tuples:
 
-		i += 1
+			row = row_code[t[:order]] # State n
+			observed_col = col_code[t[order:][0]] # State n+1
 
-	return correct
+			if not row == [] and not observed_col == []: # If both states are on the matrix
+				predictions.append(index_of_max(mtx,row))
+
+			else: # Sequence of business not in matrix
+				predictions.append(randomCol(mtx)) # Random column
+
+		acc = 0
+
+		for i in range(len(real_indices)):
+			t = real_indices[i]
+			#print "R: " , t , ", R: " , predictions[i] , t == predictions[i]
+			if predictions[i] in t:
+				acc += 1
+
+		return acc / len(real_tuples)
 
 def predict(history):
 

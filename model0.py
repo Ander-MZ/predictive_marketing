@@ -96,11 +96,10 @@ def evaluateAllFirstN(trainingData, testData, n):
 			top_weekend = top_weekday
 
 		correct = 1
-		i = 0
 
 		predictions = [] 
 
-		while i < len(testData):
+		for i in range(len(testData)):
 			v = testData[i]
 			p = predictedDows[i]
 
@@ -118,12 +117,10 @@ def evaluateAllFirstN(trainingData, testData, n):
 		predicted_tuples = [list(t) for t in ntuples(predictions,n)]
 
 		acc = 0
-		i = 0
 
-		while i < len(real_tuples):
+		for i in range(len(real_tuples)):
 			if real_tuples[i] == predicted_tuples[i]:
 				acc += 1
-			i += 1
 
 		return acc / len(real_tuples)
 
@@ -152,14 +149,13 @@ def evaluateAnyFirstN(trainingData, testData, n):
 
 		correct = 0
 		acc = 0
-		i = 0
 
 		real_tuples = []
 
 		for t in ntuples(testData,n):
 			real_tuples.append([x[1] for x in t])
 
-		while i < len(real_tuples):
+		for i in range(len(real_tuples)):
 
 			t = real_tuples[i] # Get the corresponding tuple of transactions
 			week_time = predictedDows[i]
@@ -177,8 +173,6 @@ def evaluateAnyFirstN(trainingData, testData, n):
 			if correct == 1:
 				acc += 1
 				correct = 0		
-
-			i += 1
 
 		return acc / len(real_tuples)
 
