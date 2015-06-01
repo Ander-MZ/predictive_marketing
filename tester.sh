@@ -72,12 +72,12 @@ python newModelSelector.py -i $1 -t ALL -0 10 -1 1 -2 1000 -n 6 -m ${2}_2_N=6_AL
 
 echo Evaluating any - Model 2
 
-python newModelSelector.py -i $1 -t ANY -0 10 -1 1 -2 1000 -n 2 -m ${2}_0_N=2_ANY | tail -3 > ../results/${2}_out_2_N=2_ANY.txt
+python newModelSelector.py -i $1 -t ANY -0 10 -1 1 -2 1000 -n 2 -m ${2}_2_N=2_ANY | tail -3 > ../results/${2}_out_2_N=2_ANY.txt
 
-python newModelSelector.py -i $1 -t ANY -0 10 -1 1 -2 1000 -n 3 -m ${2}_0_N=3_ANY | tail -3 > ../results/${2}_out_2_N=3_ANY.txt
+python newModelSelector.py -i $1 -t ANY -0 10 -1 1 -2 1000 -n 3 -m ${2}_2_N=3_ANY | tail -3 > ../results/${2}_out_2_N=3_ANY.txt
 
-python newModelSelector.py -i $1 -t ANY -0 10 -1 1 -2 1000 -n 4 -m ${2}_0_N=4_ANY | tail -3 > ../results/${2}_out_2_N=4_ANY.txt
+python newModelSelector.py -i $1 -t ANY -0 10 -1 1 -2 1000 -n 4 -m ${2}_2_N=4_ANY | tail -3 > ../results/${2}_out_2_N=4_ANY.txt
 
-python newModelSelector.py -i $1 -t ANY -0 10 -1 1 -2 1000 -n 5 -m ${2}_0_N=5_ANY | tail -3 > ../results/${2}_out_2_N=5_ANY.txt
+python newModelSelector.py -i $1 -t ANY -0 10 -1 1 -2 1000 -n 5 -m ${2}_2_N=5_ANY | tail -3 > ../results/${2}_out_2_N=5_ANY.txt
 
-python newModelSelector.py -i $1 -t ANY -0 10 -1 1 -2 1000 -n 6 -m ${2}_0_N=6_ANY | tail -3 > ../results/${2}_out_2_N=6_ANY.txt
+python newModelSelector.py -i $1 -t ANY -0 10 -1 1 -2 1000 -n 6 -m ${2}_2_N=6_ANY | tail -3 > ../results/${2}_out_2_N=6_ANY.txt
