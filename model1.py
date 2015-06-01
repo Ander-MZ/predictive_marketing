@@ -29,10 +29,10 @@ def index_of_max(mtx,row_index):
 
 	row = mtx[row_index,:].todense()
 
-	if np.sum(row) == 0:
+	if np.sum(row) == 0: # All cols are 0
 		# return -1
 		return randint(0,np.shape(row)[1]-1) # Random col index
-	elif np.sum(row) / np.shape(row)[1] == row[0,0]:
+	elif np.sum(row) / np.shape(row)[1] == row[0,0]: # All cols are same value
 		# return -2
 		return randint(0,np.shape(row)[1]-1) # Random col index
 	else:
@@ -128,8 +128,8 @@ def create_sparse_matrix(chain,order):
 def evaluateAllFirstN(trainingData, testData, n, order=1):
 
 	# Remove DOW and MONTH from data (not used here)
-	trainingData = [x[0] for x in trainingData]
-	testData = [x[0] for x in testData]
+	trainingData = [x[1] for x in trainingData]
+	testData = [x[1] for x in testData]
 
 	(mtx,row_code,col_code) = create_sparse_matrix(trainingData,order)
 
@@ -169,8 +169,8 @@ def evaluateAllFirstN(trainingData, testData, n, order=1):
 def evaluateAnyFirstN(trainingData, testData, n, order=1):
 
 	# Remove DOW and MONTH from data (not used here)
-	trainingData = [x[0] for x in trainingData]
-	testData = [x[0] for x in testData]
+	trainingData = [x[1] for x in trainingData]
+	testData = [x[1] for x in testData]
 
 	(mtx,row_code,col_code) = create_sparse_matrix(trainingData,order)
 

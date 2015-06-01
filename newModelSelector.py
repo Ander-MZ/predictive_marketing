@@ -168,13 +168,10 @@ def fast_iter(history):
 	# Separate history based on a fraction (default: 75%)
 	n_t = int(math.floor(alpha*len(history)))
 
-	print "history: " , history , " n: " , n
-
 	# Only consider cards with transactions on September
-	if n < len(history):
+	if 0 < n < len(history):
 		p = select_and_evaluate_model(history,n)
 		results.append((p,n))
-
 
 def create_output():
 
