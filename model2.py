@@ -129,7 +129,7 @@ def evaluateAllFirstN(trainingData, testData, n, order=2):
 
 	tuples = ntuples(trainingData[len(trainingData)-order:]+testData,order+1)
 
-	while i < n and i < len(tuples):
+	while correct == 1 and i < n and i < len(tuples):
 
 		t = tuples[i]
 
@@ -170,7 +170,7 @@ def evaluateAnyFirstN(trainingData, testData, n, order=2):
 
 	tuples = ntuples(trainingData[len(trainingData)-order:]+testData,order+1)
 
-	while i < n and i < len(tuples):
+	while correct == 1 and i < n and i < len(tuples):
 
 		t = tuples[i]
 
