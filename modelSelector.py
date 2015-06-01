@@ -13,13 +13,14 @@ import warnings
 import time
 import itertools
 import operator
+from random import randint
 
 # Models
 
+import model0_A
 import model0
 import model1
 import model2
-import model3
 
 # Utils
 
@@ -34,7 +35,7 @@ results = []
 history_file=''
 results_file=''
 alpha=0.75
-modelName = ""
+modelName = "0"
 m0_max_history = 1000
 m1_max_history = 1
 m2_max_history = 1
@@ -43,7 +44,7 @@ evaltype = "ALL"
  
 # Read command line args (training file, results file, proportion of history)
 try:
-	myopts, args = getopt.getopt(sys.argv[1:],"i:o:a:t:n:m:0:1:2:",["input=","output=","alpha=","evaltype=","firstN=","name=","model0=","model1=","model2="])
+	myopts, args = getopt.getopt(sys.argv[1:],"i:a:t:n:m:",["input=","alpha=","firstN=","model="])
 except getopt.GetoptError:
 	print "Arguments are incomplete"
 	sys.exit(2)
@@ -54,24 +55,14 @@ except getopt.GetoptError:
 for opt, arg in myopts:
     if opt in ("-i","--input"):
         history_file=arg
-    elif opt in ("-o","--output"):
-        results_file=arg
     elif opt in ("-a","--alpha"):
-        alpha=float(arg)
-    elif opt in ("-t","--evaltype"):
-        evaltype=arg       
+        alpha=float(arg)   
     elif opt in ("-n","--firstN"):
         firstN=int(arg)        
-    elif opt in ("-m","--modelName"):
+    elif opt in ("-m","--model"):
         modelName=arg
-    elif opt in ("-0","--model0"):
-        m0_max_history=int(arg)   
-    elif opt in ("-1","--model1"):
-        m1_max_history=int(arg)   
-    elif opt in ("-2","--model2"):
-        m2_max_history=int(arg)   
     else:
-        print("Usage: %s -i input -o output -a alpha -0 model0 -1 model1 -2 model2" % sys.argv[0])
+        print("Usage: %s -i input -a alpha -n firstN -m model" % sys.argv[0])
 
 print "Model: " , modelName
 
@@ -88,8 +79,6 @@ def assign_partition(value,partition):
 		i += 1
 
 	return i-1
-
-# Updates the matrix containing the results of all evaluations
 
 # Updates the matrix containing the results of all evaluations
 
@@ -124,34 +113,32 @@ def update_evaluation_matrix(mtx,counts,results,xpartition,ypartition):
 
 def select_and_evaluate_model(history,n):
 
-	global firstN
-
 	if len(history) < 2: # Not enought data for training or testing
 		
 		return 0.0
 
-	elif n <= m0_max_history: # Model 0
+	elif modelName == "0": # Model 0
 
 		if evaltype == "ALL":
 			return model0.evaluateAllFirstN(history[:n],history[n:],firstN)
 		else:
 			return model0.evaluateAnyFirstN(history[:n],history[n:],firstN)
 
-	elif n <= m1_max_history: # Model 1
+	elif modelName == "1": # Model 1
 
 		if evaltype == "ALL":
 			return model1.evaluateAllFirstN(history[:n],history[n:],firstN,1)
 		else:
 			return model1.evaluateAnyFirstN(history[:n],history[n:],firstN,1)
 
-	elif n <= m2_max_history: # Model 2
+	elif modelName == "2": # Model 2
 
 		if evaltype == "ALL":
 			return model2.evaluateAllFirstN(history[:n],history[n:],firstN,2)
 		else:
 			return model2.evaluateAnyFirstN(history[:n],history[n:],firstN,2)
 
-	else: # More than
+	else: # 
 		
 		return -1.0
 
@@ -161,16 +148,17 @@ def fast_iter(history):
 
 	n = 0
 	# Separate history in 2 sections: training (04-08) and test (09)
-	for t in history:
-		if int(t[2]) < 9: # Month less than 9 (September)
-			n +=1
+	# for t in history:
+	# 	if int(t[2]) < 9: # Month less than 9 (September)
+	# 		n +=1
 
 	# Separate history based on a fraction (default: 75%)
-	n_t = int(math.floor(alpha*len(history)))
+	n = int(math.floor(alpha*len(history)))
 
 	# Only consider cards with transactions on September
 	if 0 < n < len(history):
-		p = select_and_evaluate_model(history,n)
+		# p = select_and_evaluate_model(history,n)
+		p = model0_A.createInferences(history[:n],history[n:],firstN)
 		results.append((p,n))
 
 def create_output():
@@ -232,7 +220,7 @@ types = {'pan':'str',
 
 ### PAN = 0, AMOUNT = 1,MCC = 2, YEAR = 3, MONTH = 4,DAY = 5, HOUR = 6, MIN = 7, DOW = 8, COM_ID = 9, T_ID = 10
 
-cols = [0,4,8,9] # {PAN,MONTH,DOW,COM_ID}
+cols = [0,4,6,8,9,10] # {PAN,MONTH,DOW,COM_ID,T_ID}
 
 t0 = millis = int(round(time.time() * 1000))
 
@@ -254,15 +242,11 @@ for pan, grp in itertools.groupby(data, key=operator.itemgetter(0)):
 		sys.stdout.write("\tCurrent progress: %d cards processed\r" % (progress) )
 		sys.stdout.flush()
 
-	# CardHistory = {AMOUNT,MCC,YEAR,MONTH,DAY,HOUR,MIN,DOW,COM_ID}
-
-	# AllHistory = {{AMOUNT, MCC, ...},{AMOUNT, MCC, ...},...,{AMOUNT, MCC, ...}}
-
-	# t = {MONTH,DOW,COM_ID}
-
+	# t = {MONTH,HOUR,DOW,COM_ID,T_ID}
 	for t in allHistory:
-		card_history.append( (str(t[1]),str(t[2]),str(t[0])) ) # Index depends of 'cols' array
-															   # {DOW, COM_ID, MONTH}
+		#card_history.append( (str(t[0]),str(t[1]),str(t[2]),str(t[3]),str(t[4])) ) # Index depends of 'cols' array
+		card_history.append( (str(t[0]),str(t[1]),str(t[2]),str(t[3]),str(randint(1,9223372036854775807))) ) # Index depends of 'cols' array
+															   
 	fast_iter(card_history)
 
 	del grp

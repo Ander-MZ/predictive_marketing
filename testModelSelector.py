@@ -20,6 +20,7 @@ import model0
 import model1
 import model2
 import model3
+import dow
 
 # Utils
 
@@ -29,6 +30,7 @@ import plotter
 
 # Global variables
 results = []
+dowRes = []
 
 # Store input and output file names
 history_file=''
@@ -158,24 +160,27 @@ def select_and_evaluate_model(history,n):
 def fast_iter(history):
 
 	global results
+	global dowRes
 
-	n = 0
-	# Separate history in 2 sections: training (04-08) and test (09)
-	for t in history:
-		if int(t[2]) < 9: # Month less than 9 (September)
-			n +=1
+	# n = 0
+	# # Separate history in 2 sections: training (04-08) and test (09)
+	# for t in history:
+	# 	if int(t[2]) < 9: # Month less than 9 (September)
+	# 		n +=1
 
 	# Separate history based on a fraction (default: 75%)
-	n_t = int(math.floor(alpha*len(history)))
+	n = int(math.floor(alpha*len(history)))
 
 	# Only consider cards with transactions on September
 	if 0 < n < len(history):
-		p = select_and_evaluate_model(history,n)
-		results.append((p,n))
+		# p = select_and_evaluate_model(history,n)
+		# results.append((p,n))
+		dowRes.append(dow.classifyDOW(history[:n],history[n:]))
 
 def create_output():
 
 	global results
+	global dowRes
 
 	# Configurations for evaluation matrix
 	m_min_history = 0
@@ -192,11 +197,12 @@ def create_output():
 	mtx = update_evaluation_matrix(mtx,counts,results,min_range,min_range)
 	precision = [float(i[0]) for i in results]
 
-	print "Average precision: " , sum(precision)/len(precision)
+	print "Average DOW precision: " , sum(dowRes)/len(dowRes)
+	# print "Average precision: " , sum(precision)/len(precision)
 
 	#plotter.plot_matrix(mtx,max_range,min_range,"Precision of model " + modelName,"../results/model_" + modelName + "_matrix.png")
 	#plotter.plot_histogram(np.asarray(precision),"Precision of model " + modelName,"../results/model_" + modelName + "_histogram.png")
-	plotter.plot_row_matrix(mtx,max_range,"Precision of model " + modelName,"../results/model_" + modelName + "_row_matrix.png")
+	#plotter.plot_row_matrix(mtx,max_range,"Precision of model " + modelName,"../results/model_" + modelName + "_row_matrix.png")
 
 	print "Evaluation completed!"
 
@@ -230,9 +236,9 @@ types = {'pan':'str',
 	  'com_id':'str',
 	  't_id':'str'}
 
-### PAN = 0, AMOUNT = 1,MCC = 2, YEAR = 3, MONTH = 4,DAY = 5, HOUR = 6, MIN = 7, DOW = 8, COM_ID = 9, T_ID = 10
+### PAN = 0, AMOUNT = 1,MCC = 2, YEAR = 3, MONTH = 4, DAY = 5, HOUR = 6, MIN = 7, DOW = 8, COM_ID = 9, T_ID = 10
 
-cols = [0,4,8,9] # {PAN,MONTH,DOW,COM_ID}
+cols = [0,4,6,8,9] # {PAN,MONTH,DOW,COM_ID}
 
 t0 = millis = int(round(time.time() * 1000))
 
@@ -258,11 +264,11 @@ for pan, grp in itertools.groupby(data, key=operator.itemgetter(0)):
 
 	# AllHistory = {{AMOUNT, MCC, ...},{AMOUNT, MCC, ...},...,{AMOUNT, MCC, ...}}
 
-	# t = {MONTH,DOW,COM_ID}
+	# t = {MONTH,HOUR,DOW,COM_ID}
 
 	for t in allHistory:
-		card_history.append( (str(t[1]),str(t[2]),str(t[0])) ) # Index depends of 'cols' array
-															   # {DOW, COM_ID, MONTH}
+		card_history.append( (str(t[2]),str(t[3]),str(t[0]),str(t[1])) ) # Index depends of 'cols' array
+															   # {DOW, COM_ID, MONTH, HOUR}
 	fast_iter(card_history)
 
 	del grp
