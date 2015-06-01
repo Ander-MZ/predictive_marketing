@@ -8,6 +8,19 @@ from itertools import izip, islice
 
 ### =================================================================================
 
+# Receives a list and returns a list of overlapping n-tuples:
+# in = [1,2,3,4,5] and n = 2 then out = [(1,2),(2,3),(3,4),(4,5)]
+# in = [1,2,3,4,5] and n = 3 then out = [(1,2,3),(2,3,4),(3,4,5)]
+
+def ntuples(lst, n):
+	if n == 1:
+		tuples = []
+		for elem in lst:
+			tuples.append((elem,))
+		return tuples
+	else:
+		return zip(*[lst[i:]+lst[:i] for i in range(n)])[:(-n+1)]
+
 # Receives a list and a positive integer, returning the 'n' most common elements of the
 # list, in a tuple (element,frequency). By default returns THE most common element. 
 
@@ -61,73 +74,113 @@ def predictDows(trainingData, testData):
 
 def evaluateAllFirstN(trainingData, testData, n):
 
-	(weekday,weekend) = filterByDOW(trainingData)
-	predictedDows = predictDows(trainingData, testData)
+	if n > len(testData):
+		return -1.0 # Ignore this card for this specific test
+	else:
 
-	top_weekday = -1
-	top_weekend = -1
+		(weekday,weekend) = filterByDOW(trainingData)
+		predictedDows = predictDows(trainingData, testData)
 
-	if len(weekday) > 0:
-		top_weekday = most_common(weekday)
+		top_weekday = -1
+		top_weekend = -1
 
-	if len(weekend) > 0:	
-		top_weekend = most_common(weekend)
+		if len(weekday) > 0:
+			top_weekday = most_common(weekday)
 
-	if top_weekday == -1 and top_weekend != -1: # Transactions only seen on weekends
-		top_weekday = top_weekend
-	elif top_weekday != -1 and top_weekend == -1: # Transactions only seen on weekdays
-		top_weekend = top_weekday
+		if len(weekend) > 0:	
+			top_weekend = most_common(weekend)
 
-	correct = 1
-	i = 0
+		if top_weekday == -1 and top_weekend != -1: # Transactions only seen on weekends
+			top_weekday = top_weekend
+		elif top_weekday != -1 and top_weekend == -1: # Transactions only seen on weekdays
+			top_weekend = top_weekday
 
-	while i < n and i < len(testData):
-		v = testData[i]
-		p = predictedDows[i]
-		if p == 1: # Weekend
-			if v[1] != top_weekend:
-				correct = 0
-		else: # Weekday
-			if v[1] != top_weekday:
-				correct = 0
-		i += 1
+		correct = 1
+		i = 0
 
-	return correct
+		predictions = [] 
+
+		while i < len(testData):
+			v = testData[i]
+			p = predictedDows[i]
+
+			if p == 1: # Weekend
+				predictions.append(top_weekend)
+			else: # Weekday
+				predictions.append(top_weekday)
+			i += 1
+
+		real_tuples = []
+
+		for t in ntuples(testData,n):
+			real_tuples.append([x[1] for x in t])
+
+		predicted_tuples = [list(t) for t in ntuples(predictions,n)]
+
+		acc = 0
+		i = 0
+
+		while i < len(real_tuples):
+			if real_tuples[i] == predicted_tuples[i]:
+				acc += 1
+			i += 1
+
+		return acc / len(real_tuples)
 
 def evaluateAnyFirstN(trainingData, testData, n):
 
-	(weekday,weekend) = filterByDOW(trainingData)
-	predictedDows = predictDows(trainingData, testData)
+	if n > len(testData):
+		return -1.0 # Ignore this card for this specific test
+	else:
 
-	top_weekday = -1
-	top_weekend = -1
+		(weekday,weekend) = filterByDOW(trainingData)
+		predictedDows = predictDows(trainingData, testData)
 
-	if len(weekday) > 0:
-		top_weekday = most_common(weekday)
+		top_weekday = -1
+		top_weekend = -1
 
-	if len(weekend) > 0:	
-		top_weekend = most_common(weekend)
+		if len(weekday) > 0:
+			top_weekday = most_common(weekday)
 
-	if top_weekday == -1 and top_weekend != -1: # Transactions only seen on weekends
-		top_weekday = top_weekend
-	elif top_weekday != -1 and top_weekend == -1: # Transactions only seen on weekdays
-		top_weekend = top_weekday
+		if len(weekend) > 0:	
+			top_weekend = most_common(weekend)
 
-	correct = 0
-	i = 0
+		if top_weekday == -1 and top_weekend != -1: # Transactions only seen on weekends
+			top_weekday = top_weekend
+		elif top_weekday != -1 and top_weekend == -1: # Transactions only seen on weekdays
+			top_weekend = top_weekday
 
-	while i < n and i < len(testData):
-		v = testData[i]
-		p = predictedDows[i]
-		if p == 1: # Weekend
-			if v[1] == top_weekend:
-				correct = 1
-		else: # Weekday
-			if v[1] == top_weekday:
-				correct = 1
-		i += 1
+		correct = 0
+		acc = 0
+		i = 0
 
-	return correct
+		real_tuples = []
+
+		for t in ntuples(testData,n):
+			real_tuples.append([x[1] for x in t])
+
+		while i < len(real_tuples):
+
+			t = real_tuples[i] # Get the corresponding tuple of transactions
+			week_time = predictedDows[i]
+
+			if week_time == 1: # Weekend
+				for v in t:
+					if v == top_weekend:
+						correct = 1
+				
+			else: # Weekday
+				for v in t:
+					if v == top_weekday:
+						correct = 1
+
+			if correct == 1:
+				acc += 1
+				correct = 0		
+
+			i += 1
+
+		return acc / len(real_tuples)
 
 # Receives a transaction history and returns the most probable MCC / COM_ID of the next transaction
 
