@@ -202,8 +202,8 @@ def create_output():
 
 	print "Average precision: Sequence =" , sum(precision1)/len(precision1) , ", Range =" , sum(precision2)/len(precision2)
 
-	plotter.plot_row_matrix(mtx1,max_range,"Precision of model " + modelName + " (Sequence)" , "../results/model_s_" + modelName + "_N=" + str(firstN) + "_row_matrix.png")
-	plotter.plot_row_matrix(mtx2,max_range,"Precision of model " + modelName + " (Range)" , "../results/model_r_" + modelName + "_N=" + str(firstN) + "_row_matrix.png")
+	plotter.plot_row_matrix(mtx1,max_range,"Precision of model " + modelName + " (Sequence)" , "../results/model_s_M=" + modelName + "_N=" + str(firstN) + "_row_matrix.png")
+	plotter.plot_row_matrix(mtx2,max_range,"Precision of model " + modelName + " (Range)" , "../results/model_r_M=" + modelName + "_N=" + str(firstN) + "_row_matrix.png")
 
 	print "Evaluation completed!"
 
