@@ -175,7 +175,11 @@ def fast_iter(history):
 	if 0 < n < len(history):
 		# p = select_and_evaluate_model(history,n)
 		# results.append((p,n))
-		dowRes.append(dow.classifyDOW(history[:n],history[n:]))
+		p = dow.predictDowMarkov(history[:n],history[n:],firstN)
+
+		# Ignore -1 flags from models
+		if p >= 0:
+			dowRes.append(p)
 
 def create_output():
 
