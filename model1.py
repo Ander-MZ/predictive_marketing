@@ -127,7 +127,7 @@ def create_sparse_matrix(chain,order):
 
 def evaluateAllFirstN(trainingData, testData, n, order=1):
 
-	if n > len(testData):
+	if n > len(testData) or len(trainingData)-order+1 < 1:
 		return -1.0 # Ignore this card for this specific test
 	else:
 
@@ -159,8 +159,6 @@ def evaluateAllFirstN(trainingData, testData, n, order=1):
 			real_indices.append(tmp)
 
 		predictions = [] 
-
-		correct = 0
 
 		for t in tuples:
 
@@ -186,7 +184,7 @@ def evaluateAllFirstN(trainingData, testData, n, order=1):
 
 def evaluateAnyFirstN(trainingData, testData, n, order=1):
 
-	if n > len(testData):
+	if n > len(testData) or len(trainingData)-order+1 < 1:
 		return -1.0 # Ignore this card for this specific test
 	else:
 
@@ -218,8 +216,6 @@ def evaluateAnyFirstN(trainingData, testData, n, order=1):
 			real_indices.append(tmp)
 
 		predictions = [] 
-
-		correct = 0
 
 		for t in tuples:
 

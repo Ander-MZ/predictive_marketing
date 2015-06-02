@@ -67,13 +67,19 @@ def create_sparse_matrix(chain,order):
 	row_code = collections.defaultdict(list)
 	col_code = collections.defaultdict(list)
 	states = set(chain)
-	
 	rows = set()
 
 	# Extract all the different N-Grams from the chain
 
 	for t in ntuples(chain,order):
 		rows.add(frozenset(t))
+
+	if len(rows)==0:
+		print "ZERO"
+		print order
+		print chain
+		print ntuples(chain,order)
+		print "n: " , len(chain)-order+1
 
 	# Generate a numerical index for each N-Gram
 
@@ -116,7 +122,7 @@ def create_sparse_matrix(chain,order):
 
 def evaluateAllFirstN(trainingData, testData, n, order=2):
 
-	if n > len(testData):
+	if n > len(testData) or len(trainingData)-order+1 < 1:
 		return -1.0 # Ignore this card for this specific test
 	else:
 
@@ -173,7 +179,7 @@ def evaluateAllFirstN(trainingData, testData, n, order=2):
 
 def evaluateAnyFirstN(trainingData, testData, n, order=2):
 
-	if n > len(testData):
+	if n > len(testData) or len(trainingData)-order+1 < 1:
 		return -1.0 # Ignore this card for this specific test
 	else:
 
