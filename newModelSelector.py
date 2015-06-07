@@ -1,14 +1,10 @@
 # -*- coding: utf-8 -*-
 from __future__ import division
 import numpy as np
-import collections
 import pandas as pd
-import sys, getopt
-from itertools import izip, islice, product
-import scipy.sparse as sps
+import sys
+import getopt
 import math
-import matplotlib
-import matplotlib.pyplot as plt
 import warnings
 import time
 import itertools
