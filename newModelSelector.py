@@ -24,22 +24,20 @@ import plotter
 ### =================================================================================
 
 # Global variables
-results = []
+results1 = []
+results2 = []
 
 # Store input and output file names
 history_file=''
 results_file=''
 alpha=0.75
-modelName = ""
-m0_max_history = 1000
-m1_max_history = 1
-m2_max_history = 1
+modelName = "0"
 firstN = 1
 evaltype = "ALL"
  
 # Read command line args (training file, results file, proportion of history)
 try:
-	myopts, args = getopt.getopt(sys.argv[1:],"i:o:a:t:n:m:0:1:2:",["input=","output=","alpha=","evaltype=","firstN=","name=","model0=","model1=","model2="])
+	myopts, args = getopt.getopt(sys.argv[1:],"i:a:t:n:m:",["input=","alpha=","firstN=","model="])
 except getopt.GetoptError:
 	print "Arguments are incomplete"
 	sys.exit(2)
@@ -50,32 +48,22 @@ except getopt.GetoptError:
 for opt, arg in myopts:
     if opt in ("-i","--input"):
         history_file=arg
-    elif opt in ("-o","--output"):
-        results_file=arg
     elif opt in ("-a","--alpha"):
-        alpha=float(arg)
-    elif opt in ("-t","--evaltype"):
-        evaltype=arg       
+        alpha=float(arg)   
     elif opt in ("-n","--firstN"):
         firstN=int(arg)        
-    elif opt in ("-m","--modelName"):
+    elif opt in ("-m","--model"):
         modelName=arg
-    elif opt in ("-0","--model0"):
-        m0_max_history=int(arg)   
-    elif opt in ("-1","--model1"):
-        m1_max_history=int(arg)   
-    elif opt in ("-2","--model2"):
-        m2_max_history=int(arg)   
     else:
-        print("Usage: %s -i input -o output -a alpha -0 model0 -1 model1 -2 model2" % sys.argv[0])
+        print("Usage: %s -i input -a alpha -n firstN -m model" % sys.argv[0])
 
 print "Model: " , modelName
 
 ### =================================================================================
 
 def assign_partition(value,partition):
-	i = 0
 
+	i = 0
 	# There are n+1 partitions, but only n indices
 	while(i < len(partition)-1 and value > partition[i]):
 		i += 1
@@ -118,7 +106,7 @@ def update_evaluation_matrix(mtx,counts,results,xpartition,ypartition):
 # Based on the characteristics of the transaction history of the card, the best
 # model is used to create the prediction
 
-def select_and_evaluate_model(history,n):
+def select_and_evaluate_model(history,n,t):
 
 	global firstN
 
@@ -126,34 +114,37 @@ def select_and_evaluate_model(history,n):
 		
 		return 0.0
 
-	elif n <= m0_max_history: # Model 0
+	else:
 
-		if evaltype == "ALL":
-			return model0.evaluateAllFirstN(history[:n],history[n:],firstN)
-		else:
-			return model0.evaluateAnyFirstN(history[:n],history[n:],firstN)
+		if modelName == "0": # Model 0
 
-	elif n <= m1_max_history: # Model 1
+			if t == "ALL":
+				return model0.evaluateAllFirstN(history[:n],history[n:],firstN)
+			else:
+				return model0.evaluateAnyFirstN(history[:n],history[n:],firstN)
 
-		if evaltype == "ALL":
-			return model1.evaluateAllFirstN(history[:n],history[n:],firstN,1)
-		else:
-			return model1.evaluateAnyFirstN(history[:n],history[n:],firstN,1)
+		elif modelName == "1": # Model 1
 
-	elif n <= m2_max_history: # Model 2
+			if t == "ALL":
+				return model1.evaluateAllFirstN(history[:n],history[n:],firstN,1)
+			else:
+				return model1.evaluateAnyFirstN(history[:n],history[n:],firstN,1)
 
-		if evaltype == "ALL":
-			return model2.evaluateAllFirstN(history[:n],history[n:],firstN,2)
-		else:
-			return model2.evaluateAnyFirstN(history[:n],history[n:],firstN,2)
+		elif modelName == "2": # Model 2
 
-	else: # More than
-		
-		return -1.0
+			if t == "ALL":
+				return model2.evaluateAllFirstN(history[:n],history[n:],firstN,2)
+			else:
+				return model2.evaluateAnyFirstN(history[:n],history[n:],firstN,2)
+
+		else: # More than
+			
+			return -1.0
 
 def fast_iter(history):
 
-	global results
+	global results1
+	global results2
 
 	n = 0
 	# Separate history in 2 sections: training (04-08) and test (09)
@@ -166,33 +157,49 @@ def fast_iter(history):
 
 	# Only consider cards with transactions on September
 	if 0 < n < len(history):
-		p = select_and_evaluate_model(history,n)
-		results.append((p,n))
+		p1 = select_and_evaluate_model(history,n,"ALL")
+		p2 = select_and_evaluate_model(history,n,"ANY")
+
+		# Ignore -1 flags from models
+		if p1 >= 0:
+			results1.append((p1,n))
+
+		# Ignore -1 flags from models
+		if p2 >= 0:
+			results2.append((p2,n))
 
 def create_output():
 
-	global results
+	global results1
+	global results2
 
 	# Configurations for evaluation matrix
 	m_min_history = 0
 	m_max_history = 500
 	delta = 25
 	levels = int(math.floor((m_max_history-m_min_history)/delta))
-	mtx = np.zeros((levels,levels), dtype=np.float) - 1
-	counts = np.zeros((levels,levels), dtype=np.float)
+
+	mtx1 = np.zeros((levels,levels), dtype=np.float) - 1
+	counts1 = np.zeros((levels,levels), dtype=np.float)
+
+	mtx2 = np.zeros((levels,levels), dtype=np.float) - 1
+	counts2 = np.zeros((levels,levels), dtype=np.float)
+
 	min_range = range(m_min_history,delta*levels+m_min_history,delta)
 	max_range = range(m_min_history+delta,delta*levels+m_min_history+delta,delta)
 
 	###
 
-	mtx = update_evaluation_matrix(mtx,counts,results,min_range,min_range)
-	precision = [float(i[0]) for i in results]
+	mtx1 = update_evaluation_matrix(mtx1,counts1,results1,min_range,min_range)
+	precision1 = [float(i[0]) for i in results1]
 
-	print "Average precision: " , sum(precision)/len(precision)
+	mtx2 = update_evaluation_matrix(mtx2,counts2,results2,min_range,min_range)
+	precision2 = [float(i[0]) for i in results2]
 
-	#plotter.plot_matrix(mtx,max_range,min_range,"Precision of model " + modelName,"../results/model_" + modelName + "_matrix.png")
-	#plotter.plot_histogram(np.asarray(precision),"Precision of model " + modelName,"../results/model_" + modelName + "_histogram.png")
-	plotter.plot_row_matrix(mtx,max_range,"Precision of model " + modelName,"../results/model_" + modelName + "_row_matrix.png")
+	print "Average precision: Sequence =" , sum(precision1)/len(precision1) , ", Range =" , sum(precision2)/len(precision2)
+
+	plotter.plot_row_matrix(mtx1,max_range,"Precision of model " + modelName + " (Sequence)" , "../results/model_s_M=" + modelName + "_N=" + str(firstN) + "_row_matrix.png")
+	plotter.plot_row_matrix(mtx2,max_range,"Precision of model " + modelName + " (Range)" , "../results/model_r_M=" + modelName + "_N=" + str(firstN) + "_row_matrix.png")
 
 	print "Evaluation completed!"
 
