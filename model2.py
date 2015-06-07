@@ -74,13 +74,6 @@ def create_sparse_matrix(chain,order):
 	for t in ntuples(chain,order):
 		rows.add(frozenset(t))
 
-	if len(rows)==0:
-		print "ZERO"
-		print order
-		print chain
-		print ntuples(chain,order)
-		print "n: " , len(chain)-order+1
-
 	# Generate a numerical index for each N-Gram
 
 	index = 0
@@ -112,9 +105,9 @@ def create_sparse_matrix(chain,order):
 		append_col(col_code[t[order:][0]])
 		append_f(1) 
 
-	# Create a sparse matrix in 'coo' format with # rows = # N-Grams and # cols = states 
+	# Create a sparse matrix in 'coo' format
 	warnings.filterwarnings("ignore")
-	mtx = sps.coo_matrix((f, (row, col)), shape=(len(row_code), len(col_code)))
+	mtx = sps.coo_matrix((f, (row, col)), shape=(len(rows), len(states)))
 
 	# Transform matrix into Compressed Sparse Row format to allow arithmetic manipulation and slicing
 

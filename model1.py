@@ -74,15 +74,13 @@ def create_sparse_matrix(chain,order):
 	for t in ntuples(chain,order):
 		rows.add(t)
 
+	# Generate a numerical index for each N-Gram
+
 	index = 0
 
 	for t in rows:
 		row_code[t]=index
 		index += 1
-
-	# for p in product(sorted(states),repeat=max(order,1)):
-	# 	row_code["".join(p)]=index	
-	# 	index += 1
 
 	# Generate a numerical index for each state
 
@@ -107,23 +105,13 @@ def create_sparse_matrix(chain,order):
 		append_col(col_code[t[order:][0]])
 		append_f(1) 
 
-	# Create a sparse matrix in 'coo' format with # rows = (states^order) and # cols = states 
+	# Create a sparse matrix in 'coo' format 
 	warnings.filterwarnings("ignore")
 	mtx = sps.coo_matrix((f, (row, col)), shape=(len(rows), len(states)))
+
 	# Transform matrix into Compressed Sparse Row format to allow arithmetic manipulation and slicing
 
-	mtx = mtx.tocsr()
-
-	# Normalize matrix to represent probabilities
-
-	#row_sums = np.array(mtx.sum(axis=1))[:,0]
-	#row_indices, col_indices = mtx.nonzero()
-	#mtx.data = mtx.data / row_sums[row_indices]
-
-	#print "Density: " , mtx.nnz/len(rows)
-	#np.savetxt(("../results/matrices/" + str(pan) + ".csv"), matrix, delimiter=",",fmt='%.4f')
-
-	return (mtx,row_code,col_code)
+	return (mtx.tocsr(),row_code,col_code)
 
 def evaluateAllFirstN(trainingData, testData, n, order=1):
 
