@@ -33,9 +33,12 @@ def most_common(lst,n=1):
 
 # Returns '1' if transaction ocurred on Weekend, '0' if ocurred on Weekday
 
-def getDowCode(transaction):
-	if transaction[0] in ['6','0']: # Weekend
-		return 1
+def predictDow(previous_transaction):
+	if previous_transaction[0] in ['6','0']: # Weekend
+		if previous_transaction[0] == '0' and int(previous_transaction[3]) > 16:
+			return 0
+		else:
+			return 1
 	else:
 		return 0
 
@@ -62,9 +65,9 @@ def predictDows(trainingData, testData):
 	for i in range(len(testData)):
 		if i==0:
 			t = trainingData[len(trainingData)-1]
-			predicted.append(getDowCode(t))		
+			predicted.append(predictDow(t))		
 		else:			
-			predicted.append(getDowCode(testData[i-1]))
+			predicted.append(predictDow(testData[i-1]))
 
 	return predicted
 
