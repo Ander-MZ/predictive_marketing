@@ -3,7 +3,6 @@ from __future__ import division
 import numpy as np
 import collections
 import sys, getopt
-from itertools import izip, islice, product
 import scipy.sparse as sps
 from random import randint
 import warnings
@@ -66,7 +65,6 @@ def create_sparse_matrix(chain,order):
 
 	row_code = collections.defaultdict(list)
 	col_code = collections.defaultdict(list)
-	states = set(chain)
 	rows = set()
 
 	# Extract all the different N-Grams from the chain
@@ -78,15 +76,15 @@ def create_sparse_matrix(chain,order):
 
 	index = 0
 
-	for ngram in rows:
-		row_code[ngram]=index	
+	for t in rows:
+		row_code[t]=index	
 		index += 1
 
 	# Generate a numerical index for each unique state
 
 	index = 0
 
-	for element in states:
+	for element in set(chain):
 		col_code[element]=index
 		index += 1
 
@@ -107,7 +105,7 @@ def create_sparse_matrix(chain,order):
 
 	# Create a sparse matrix in 'coo' format
 	warnings.filterwarnings("ignore")
-	mtx = sps.coo_matrix((f, (row, col)), shape=(len(rows), len(states)))
+	mtx = sps.coo_matrix((f, (row, col)), shape=(len(row), len(col)))
 
 	# Transform matrix into Compressed Sparse Row format to allow arithmetic manipulation and slicing
 
