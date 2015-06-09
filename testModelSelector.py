@@ -37,8 +37,8 @@ history_file=''
 results_file=''
 alpha=0.75
 modelName = ""
-m0_max_history = 1000
-m1_max_history = 1
+m0_max_history = 1
+m1_max_history = 1000
 m2_max_history = 1
 firstN = 1
 evaltype = "ALL"
@@ -173,13 +173,15 @@ def fast_iter(history):
 
 	# Only consider cards with transactions on September
 	if 0 < n < len(history):
-		# p = select_and_evaluate_model(history,n)
-		# results.append((p,n))
-		p = dow.predictDowMarkov(history[:n],history[n:],firstN)
+		p = select_and_evaluate_model(history,n)
+		results.append((p,n))
 
-		# Ignore -1 flags from models
-		if p >= 0:
-			dowRes.append(p)
+
+		# p = dow.predictDowMarkov(history[:n],history[n:],firstN)
+
+		# # Ignore -1 flags from models
+		# if p >= 0:
+		# 	dowRes.append(p)
 
 def create_output():
 
@@ -201,8 +203,8 @@ def create_output():
 	mtx = update_evaluation_matrix(mtx,counts,results,min_range,min_range)
 	precision = [float(i[0]) for i in results]
 
-	print "Average DOW precision: " , sum(dowRes)/len(dowRes)
-	# print "Average precision: " , sum(precision)/len(precision)
+	# print "Average DOW precision: " , sum(dowRes)/len(dowRes)
+	print "Average precision: " , sum(precision)/len(precision)
 
 	#plotter.plot_matrix(mtx,max_range,min_range,"Precision of model " + modelName,"../results/model_" + modelName + "_matrix.png")
 	#plotter.plot_histogram(np.asarray(precision),"Precision of model " + modelName,"../results/model_" + modelName + "_histogram.png")
