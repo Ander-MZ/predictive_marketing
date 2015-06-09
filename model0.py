@@ -49,7 +49,7 @@ def filterByDOW(lst):
 		if t[0] in ['6','0']: # Weekend
 			weekend.append(t[1])
 		else:
-			weekday.append(t[1])
+			weekday.append(t[0])
 
 	return (weekday,weekend)
 
