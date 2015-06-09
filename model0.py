@@ -98,12 +98,9 @@ def evaluateAllFirstN(trainingData, testData, n):
 		elif top_weekday != -1 and top_weekend == -1: # Transactions only seen on weekdays
 			top_weekend = top_weekday
 
-		correct = 1
-
 		predictions = [] 
 
 		for i in range(len(testData)):
-			v = testData[i]
 			p = predictedDows[i]
 
 			if p == 1: # Weekend
@@ -167,11 +164,13 @@ def evaluateAnyFirstN(trainingData, testData, n):
 				for v in t:
 					if v == top_weekend:
 						correct = 1
+						break
 				
 			else: # Weekday
 				for v in t:
 					if v == top_weekday:
 						correct = 1
+						break
 
 			if correct == 1:
 				acc += 1
